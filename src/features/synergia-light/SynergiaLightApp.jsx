@@ -463,7 +463,6 @@ function LeftSidebar({ step, setStep }) {
     { id: "recipesClassic", label: "Recipes", icon: "🍽" },
     { id: "weeklyPlanner", label: "Weekly Planner", icon: "🗓️" },
     { id: "tracker", label: "Tracker", icon: "📊" },
-    { id: "results", label: "Results", icon: "📈" },
   ];
   return (
     <div className="left-sidebar" style={{ width: 280, background: C.white, borderRight: `1px solid ${C.border}`, padding: "16px", position: "fixed", left: 0, top: 64, bottom: 0, overflowY: "auto", display: "none" }}>
@@ -5831,7 +5830,6 @@ function BottomNav({ step, setStep }) {
     ["recipesClassic", "Recipes"],
     ["weeklyPlanner", "Planner"],
     ["tracker", "Tracker"],
-    ["results", "Results"],
   ];
   return (
     <div className="bottom-nav-modern" style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: C.white, borderTop: `1px solid ${C.border}`, display: "flex", justifyContent: "space-around", alignItems: "center", height: 72, zIndex: 100 }}>
