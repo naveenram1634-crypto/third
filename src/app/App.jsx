@@ -21,7 +21,7 @@ export default function App() {
             fontWeight: 600,
           }}
         >
-          Loading Mazimeal...
+          Loading Synergia...
         </div>
       }
     >

@@ -1,6 +1,6 @@
 import { hasSupabaseEnv, supabase } from "../supabase/client";
 
-const STORAGE_KEY_PREFIX = "mazimeal-weekly-planner";
+const STORAGE_KEY_PREFIX = "synergia-weekly-planner";
 
 function storageKey(userKey) {
   return `${STORAGE_KEY_PREFIX}:${userKey || "guest"}`;

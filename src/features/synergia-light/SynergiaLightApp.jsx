@@ -164,7 +164,7 @@ function createInitialWeeklyPlannerState(anchorDate = new Date()) {
     { name: "Hummus and carrots", calories: 160, protein: 6, image: imageSet.snack, tip: "A veggie snack helps spread produce through the day.", nutrients: { Fiber: 58, VitaminA: 84, Energy: 44 }, emoji: "🥕" },
     { name: "Cheese and crackers", calories: 200, protein: 10, image: imageSet.snack, tip: "Whole grain crackers hold the snack steadier than refined ones.", nutrients: { Protein: 48, Calcium: 62, Satiety: 60 }, emoji: "🧀" },
     { name: "Berry smoothie", calories: 220, protein: 14, image: imageSet.snack, tip: "Adding yogurt gives it a better protein profile.", nutrients: { Protein: 70, Hydration: 78, Antioxidants: 74 }, emoji: "🫐" },
-    { name: "Banana oat bites", calories: 180, protein: 6, image: imageSet.snack, tip: "Batch prep these to avoid last-minute snack scrambles.", nutrients: { Energy: 58, Fiber: 46, Potassium: 72 }, emoji: "🍌" },
+    { name: "Banana oat bites", calories: 180, protein: 6, image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Energy_Balls_%28Unsplash%29.jpg/960px-Energy_Balls_%28Unsplash%29.jpg", tip: "Batch prep these to avoid last-minute snack scrambles.", nutrients: { Energy: 58, Fiber: 46, Potassium: 72 }, emoji: "🍌" },
   ];
 
   const days = Array.from({ length: 7 }, (_, index) => {
@@ -196,29 +196,74 @@ function createInitialWeeklyPlannerState(anchorDate = new Date()) {
   };
 }
 
+function startOfPlannerDay(dateValue = new Date()) {
+  const date = new Date(dateValue);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function addPlannerDays(dateValue, dayCount) {
+  const date = startOfPlannerDay(dateValue);
+  date.setDate(date.getDate() + dayCount);
+  return date;
+}
+
+function getPlannerDateKey(dateValue) {
+  const date = startOfPlannerDay(dateValue);
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+function getPlannerDayDate(day) {
+  return startOfPlannerDay(day?.key || day?.date || new Date());
+}
+
+function createPlannerDateOptions(dayCount = 16, anchorDate = new Date()) {
+  const today = startOfPlannerDay(anchorDate);
+  return Array.from({ length: dayCount }, (_, index) => {
+    const date = addPlannerDays(today, index);
+    return {
+      key: getPlannerDateKey(date),
+      date,
+      shortDay: date.toLocaleDateString("en-US", { weekday: "short" }),
+      longDay: date.toLocaleDateString("en-US", { weekday: "long" }),
+      dayNumber: date.toLocaleDateString("en-US", { day: "numeric" }),
+      monthLabel: date.toLocaleDateString("en-US", { month: "short" }),
+      display: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    };
+  });
+}
+
+function createPlannerDayForDate(dateValue) {
+  const date = startOfPlannerDay(dateValue);
+  const generatedState = createInitialWeeklyPlannerState(date);
+  return generatedState.days.find((day) => getPlannerDateKey(getPlannerDayDate(day)) === getPlannerDateKey(date)) || generatedState.days[0];
+}
+
 // ─── SMALL COMPONENTS ─────────────────────────────────────────────────────────
+
+function SynergiaIcon({ size = 28 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="48" height="48" fill="#11C7A5" />
+      <path
+        d="M24 10C25.9 19.4 28.6 22.1 38 24C28.6 25.9 25.9 28.6 24 38C22.1 28.6 19.4 25.9 10 24C19.4 22.1 22.1 19.4 24 10Z"
+        fill="#001411"
+      />
+    </svg>
+  );
+}
 
 function Logo({ size = 28, textColor = C.text }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
       <div style={{ width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <svg width={size * 0.9} height={size * 0.9} viewBox="0 0 256 257" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="componentLogoGrad1" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%">
-              <stop offset="0%" stopColor="#41D1FF"/>
-              <stop offset="100%" stopColor="#BD34FE"/>
-            </linearGradient>
-            <linearGradient id="componentLogoGrad2" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%">
-              <stop offset="0%" stopColor="#FFEA83"/>
-              <stop offset="8.333%" stopColor="#FFDD35"/>
-              <stop offset="100%" stopColor="#FFA800"/>
-            </linearGradient>
-          </defs>
-          <path fill="url(#componentLogoGrad1)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"/>
-          <path fill="url(#componentLogoGrad2)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"/>
-        </svg>
+        <SynergiaIcon size={size} />
       </div>
-      <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 800, fontSize: size * 0.85, color: textColor, letterSpacing: "-0.5px" }}>Mazimeal</span>
+      <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 800, fontSize: size * 0.85, color: textColor, letterSpacing: "-0.5px" }}>Synergia</span>
     </div>
   );
 }
@@ -228,7 +273,7 @@ function SiteFooter({ compact = false, marginTop = 0 }) {
     { label: "Features", href: "/#features" },
     { label: "Pricing", href: "/#pricing" },
     { label: "Start Free", href: "/#pricing" },
-    { label: "Contact", href: "mailto:hello@mazimeal.com" },
+    { label: "Contact", href: "mailto:hello@synergia.com" },
   ];
 
   return (
@@ -252,10 +297,68 @@ function SiteFooter({ compact = false, marginTop = 0 }) {
               </a>
             ))}
           </div>
-          <p style={{ fontSize: 12, color: "rgba(255, 255, 255, 0.46)", margin: 0 }}>© 2026 Mazimeal</p>
+          <p style={{ fontSize: 12, color: "rgba(255, 255, 255, 0.46)", margin: 0 }}>© 2026 Synergia</p>
         </div>
       </div>
     </footer>
+  );
+}
+
+function isPrimaryHouseholdProfile(profile, index) {
+  return index === 0 || String(profile?.name || "").trim().toLowerCase() === "maya";
+}
+
+function ProfileRemovalModal({ profile, onCancel, onConfirm }) {
+  if (!profile) return null;
+  const memberName = profile?.name || profile?.inviteEmail || "this household member";
+
+  return (
+    <div
+      role="presentation"
+      onClick={onCancel}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 2000,
+        display: "grid",
+        placeItems: "center",
+        padding: 20,
+        background: "rgba(14, 24, 19, 0.46)",
+        backdropFilter: "blur(8px)",
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="remove-profile-title"
+        onClick={(event) => event.stopPropagation()}
+        className="card"
+        style={{
+          width: "min(92vw, 480px)",
+          padding: 26,
+          borderRadius: 24,
+          boxShadow: "0 28px 70px rgba(17, 25, 20, 0.22)",
+        }}
+      >
+        <div style={{ display: "grid", gap: 18 }}>
+          <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+            <div style={{ width: 46, height: 46, borderRadius: 16, background: C.coralLight, color: C.coral, display: "grid", placeItems: "center", fontSize: 22, flexShrink: 0 }}>
+              !
+            </div>
+            <div>
+              <h3 id="remove-profile-title" style={{ margin: 0, fontFamily: "'Lora'", fontSize: 24, color: C.text }}>Remove household profile?</h3>
+              <p style={{ margin: "8px 0 0", color: C.subtext, lineHeight: 1.6, fontSize: 14.5 }}>
+                {memberName} will be disassociated from their profile and deactivated. Their saved preferences will no longer be used for household planning.
+              </p>
+            </div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+            <button type="button" className="btn-ghost" onClick={onCancel} style={{ minWidth: 120 }}>Cancel</button>
+            <button type="button" className="btn-primary" onClick={onConfirm} style={{ minWidth: 150, background: C.coral, borderColor: C.coral }}>Remove Profile</button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -296,23 +399,9 @@ function TopHeader({ user }) {
     <div className="glass-header" style={{ position: "fixed", top: 0, left: 0, right: 0, height: 64, background: C.white, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 18px", zIndex: 100 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
         <div style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="32" height="32" viewBox="0 0 256 257" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="logoGrad1" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%">
-                <stop offset="0%" stopColor="#41D1FF"/>
-                <stop offset="100%" stopColor="#BD34FE"/>
-              </linearGradient>
-              <linearGradient id="logoGrad2" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%">
-                <stop offset="0%" stopColor="#FFEA83"/>
-                <stop offset="8.333%" stopColor="#FFDD35"/>
-                <stop offset="100%" stopColor="#FFA800"/>
-              </linearGradient>
-            </defs>
-            <path fill="url(#logoGrad1)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"/>
-            <path fill="url(#logoGrad2)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"/>
-          </svg>
+          <SynergiaIcon size={32} />
         </div>
-        <div style={{ fontSize: 20, fontWeight: 700, color: C.text }}>Mazimeal</div>
+        <div style={{ fontSize: 20, fontWeight: 700, color: C.text }}>Synergia</div>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <input className="top-search" placeholder="Search recipes, meals..." style={{ width: 320, padding: "9px 14px", borderRadius: 20, border: `1px solid ${C.border}`, background: C.bg, fontSize: 14 }} />
@@ -562,6 +651,7 @@ const defaultProfileDraft = (role = "Adult") => ({
   height: "",
   weight: "",
   activity: "Moderate",
+  activityType: "Weight lifting",
   goal: "Maintain weight",
   allergies: "None",
   dislikes: "None",
@@ -699,41 +789,73 @@ function formatNutrientLabel(label) {
   return text.replace(/([a-z])([A-Z])/g, "$1 $2");
 }
 
+const EXCLUDED_NUTRIENT_LABELS = new Set(["FamilyAppeal", "Family Appeal"]);
+
+function isDisplayNutrient(label) {
+  return !EXCLUDED_NUTRIENT_LABELS.has(String(label || "").trim());
+}
+
+function inferRecipeMinerals(meal) {
+  const text = [
+    meal?.name,
+    meal?.meal,
+    meal?.label,
+    meal?.slotType,
+    meal?.tip,
+    ...(meal?.ingredients || []),
+  ].filter(Boolean).join(" ").toLowerCase();
+  const inferred = {};
+
+  const add = (label, value) => {
+    inferred[label] = Math.max(inferred[label] || 0, value);
+  };
+
+  if (/salmon|shrimp|fish|tuna|sardine|omega/.test(text)) {
+    add("Omega3", 88);
+    add("VitaminD", 76);
+    add("Selenium", 72);
+  }
+  if (/lentil|spinach|beans|chickpea|tofu|greens|kale|quinoa|hummus/.test(text)) {
+    add("Iron", 78);
+    add("Magnesium", 72);
+    add("Fiber", 76);
+  }
+  if (/yogurt|cheese|paneer|milk|parfait/.test(text)) {
+    add("Calcium", 78);
+    add("Protein", 72);
+  }
+  if (/banana|avocado|potato|fruit|berries|orange|smoothie/.test(text)) {
+    add("Potassium", 74);
+  }
+  if (/pepper|citrus|lemon|tomato|berries|orange|strawberry/.test(text)) {
+    add("VitaminC", 80);
+  }
+  if (/nuts|peanut|trail|chia|seeds|avocado|olive/.test(text)) {
+    add("HealthyFats", 76);
+    add("Magnesium", 70);
+    add("Zinc", 62);
+  }
+  if (/chicken|turkey|egg|protein|tofu|paneer/.test(text)) {
+    add("Protein", 78);
+    add("Zinc", 64);
+  }
+
+  return inferred;
+}
+
+function getDisplayNutrientProfile(meal) {
+  const combined = { ...inferRecipeMinerals(meal), ...(meal?.nutrients || {}) };
+  return Object.fromEntries(
+    Object.entries(combined).filter(([label]) => isDisplayNutrient(label))
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // MODULE 1: LANDING
 // ═══════════════════════════════════════════════════════════════════════════════
 function LandingModule({ onTrial, onLogin }) {
   const [showPromoCodes, setShowPromoCodes] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState('monthly');
-  const [heroProgress, setHeroProgress] = useState(0);
-  const heroRef = useRef(null);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!heroRef.current) return;
-      const rect = heroRef.current.getBoundingClientRect();
-      const viewport = window.innerHeight || 1;
-      const scrollY = window.scrollY || window.pageYOffset || 0;
-      const heroTop = scrollY + rect.top;
-      const start = heroTop;
-      const end = heroTop + rect.height;
-      const travel = Math.max(1, end - start);
-      const raw = (scrollY - start) / travel;
-      const clamped = Math.max(0, Math.min(1, raw));
-      setHeroProgress(clamped);
-    };
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("resize", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
-    };
-  }, []);
-
-  const floatTransform = `translate3d(${-heroProgress * 84}px, ${heroProgress * 176}px, 0) rotate(${heroProgress * 8 - 4}deg)`;
-  const heroSequenceTitle = "Iron-smart lunch sequence";
-  const heroSequenceDescription = "Mazimeal prioritizes iron-rich meals with vitamin C pairings to improve uptake during your busiest hours.";
   return (
     <div className="luxury-shell" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: C.white }}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
@@ -741,23 +863,9 @@ function LandingModule({ onTrial, onLogin }) {
       <header className="glass-header" style={{ position: "fixed", top: 0, left: 0, right: 0, height: 64, background: C.white, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 32px", zIndex: 1000 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="32" height="32" viewBox="0 0 256 257" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="landingLogoGrad1" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%">
-                  <stop offset="0%" stopColor="#41D1FF"/>
-                  <stop offset="100%" stopColor="#BD34FE"/>
-                </linearGradient>
-                <linearGradient id="landingLogoGrad2" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%">
-                  <stop offset="0%" stopColor="#FFEA83"/>
-                  <stop offset="8.333%" stopColor="#FFDD35"/>
-                  <stop offset="100%" stopColor="#FFA800"/>
-                </linearGradient>
-              </defs>
-              <path fill="url(#landingLogoGrad1)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"/>
-              <path fill="url(#landingLogoGrad2)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"/>
-            </svg>
+            <SynergiaIcon size={32} />
           </div>
-          <span style={{ fontSize: 22, fontWeight: 800, color: C.accent }}>Mazimeal</span>
+          <span style={{ fontSize: 22, fontWeight: 800, color: C.accent }}>Synergia</span>
         </div>
         <nav aria-label="Primary navigation" style={{ display: "flex", alignItems: "center", gap: 28 }}>
           <a href="#features" style={{ fontSize: 14, color: C.text, textDecoration: "none", fontWeight: 500, cursor: "pointer" }}>Features</a>
@@ -780,42 +888,16 @@ function LandingModule({ onTrial, onLogin }) {
       {/* MAIN CONTENT */}
       <main id="main-content" style={{ flex: 1, paddingTop: 64 }}>
         {/* HERO SECTION */}
-        <section ref={heroRef} className="luxury-hero" style={{ padding: "110px 32px 96px" }}>
+        <section className="luxury-hero" style={{ padding: "110px 32px 96px" }}>
           <div style={{ maxWidth: 1240, margin: "0 auto" }}>
-            <div className="luxury-hero-grid">
+            <div className="luxury-hero-grid luxury-hero-grid--single">
               <div>
-                <div className="luxury-eyebrow">{heroSequenceTitle}</div>
+                <div className="luxury-eyebrow">Smart Family Nutrition</div>
                 <h1 className="luxury-title" style={{ marginTop: 18, marginBottom: 22 }}>More calm, confidence and care in every family meal.</h1>
-                <p className="luxury-copy">Mazimeal brings together allergy-aware planning, adaptive household profiles, and premium AI meal guidance so your kitchen runs with the same clarity as a concierge service.</p>
+                <p className="luxury-copy">Synergia brings together allergy-aware planning, adaptive household profiles, and premium AI meal guidance so your kitchen runs with the same clarity as a concierge service.</p>
                 <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 28 }}>
                   <button className="btn-primary" style={{ padding: "14px 32px", fontSize: 16, minWidth: 220 }} onClick={onTrial}>Get Started for Free</button>
                   <button className="btn-ghost" style={{ padding: "14px 32px", fontSize: 16, background: "rgba(255,255,255,0.9)" }} onClick={onLogin}>Explore the Experience</button>
-                </div>
-              </div>
-
-              <div className="luxury-motion-stage">
-                <svg className="luxury-route" viewBox="0 0 520 420" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M60 330C140 250 170 190 252 186C346 182 366 90 454 52" stroke="rgba(255,255,255,0.48)" strokeWidth="2.5" strokeDasharray="8 12" strokeLinecap="round" />
-                  <circle cx="60" cy="330" r="6" fill="rgba(255,255,255,0.82)" />
-                  <circle cx="454" cy="52" r="6" fill="rgba(255,255,255,0.82)" />
-                </svg>
-
-                <div className="luxury-float-card" style={{ transform: floatTransform }}>
-                  <div className="luxury-float-image" />
-                  <div className="luxury-float-content">
-                    <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, lineHeight: 1.08, marginTop: 12, marginBottom: 8 }}>{heroSequenceTitle}</div>
-                    <p style={{ color: "rgba(255,255,255,0.8)", lineHeight: 1.7, marginBottom: 14 }}>{heroSequenceDescription}</p>
-                    <div className="luxury-stat-grid">
-                      <div className="luxury-stat">
-                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.72)", textTransform: "uppercase", letterSpacing: 1 }}>Profiles</div>
-                        <div style={{ fontSize: 24, fontWeight: 800, color: C.white, marginTop: 8 }}>6+</div>
-                      </div>
-                      <div className="luxury-stat">
-                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.72)", textTransform: "uppercase", letterSpacing: 1 }}>Planning Time</div>
-                        <div style={{ fontSize: 24, fontWeight: 800, color: C.white, marginTop: 8 }}>5 min</div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -826,7 +908,7 @@ function LandingModule({ onTrial, onLogin }) {
         <section id="features" className="luxury-section" style={{ background: C.white }}>
           <div style={{ maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ marginBottom: 36 }}>
-              <div style={{ fontSize: 12, color: C.accent, fontWeight: 700, letterSpacing: 1.4, textTransform: "uppercase", marginBottom: 12 }}>Why families love Mazimeal</div>
+              <div style={{ fontSize: 12, color: C.accent, fontWeight: 700, letterSpacing: 1.4, textTransform: "uppercase", marginBottom: 12 }}>Why families love Synergia</div>
               <h2 className="luxury-heading" style={{ marginBottom: 14 }}>Everything you need for healthier family meals in one place</h2>
               <p className="luxury-subcopy">A more personal approach to meal planning means every recommendation feels tailored, safe, and genuinely useful across the whole household.</p>
             </div>
@@ -855,7 +937,7 @@ function LandingModule({ onTrial, onLogin }) {
               <div className="luxury-service-card luxury-dark-card">
                 <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 12 }}>Personal Nutrition Manager</div>
                 <div style={{ fontFamily: "'Fraunces', serif", fontSize: 30, lineHeight: 1.1, marginBottom: 12 }}>A calmer, smarter way to run family meals.</div>
-                <p style={{ color: "rgba(255,255,255,0.8)", lineHeight: 1.8, marginBottom: 18 }}>Mazimeal acts like a dedicated planning partner, helping you move from scattered decisions to one coherent weekly system.</p>
+                <p style={{ color: "rgba(255,255,255,0.8)", lineHeight: 1.8, marginBottom: 18 }}>Synergia acts like a dedicated planning partner, helping you move from scattered decisions to one coherent weekly system.</p>
                 <div className="luxury-stat-grid">
                   <div className="luxury-stat"><div style={{ fontSize: 11, color: "rgba(255,255,255,0.72)", textTransform: "uppercase" }}>Meal Matching</div><div style={{ color: C.white, fontWeight: 800, fontSize: 22, marginTop: 8 }}>Adaptive</div></div>
                   <div className="luxury-stat"><div style={{ fontSize: 11, color: "rgba(255,255,255,0.72)", textTransform: "uppercase" }}>Allergen Filter</div><div style={{ color: C.white, fontWeight: 800, fontSize: 22, marginTop: 8 }}>Live</div></div>
@@ -1140,7 +1222,7 @@ function LandingModule({ onTrial, onLogin }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // MODULE 2: LOGIN
 // ═══════════════════════════════════════════════════════════════════════════════
-function LoginModule({ onLogin, initialTab = "login", onBack, onNavigateToSection }) {
+function LoginModule({ onLogin, onSignup, initialTab = "login", onBack, onNavigateToSection }) {
   const [tab, setTab] = useState(initialTab);
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
@@ -1155,7 +1237,7 @@ function LoginModule({ onLogin, initialTab = "login", onBack, onNavigateToSectio
       onBack();
     }
   };
-  const derivedName = name.trim() || (email.includes("@") ? email.split("@")[0] : "Mazimeal User");
+  const derivedName = name.trim() || (email.includes("@") ? email.split("@")[0] : "Synergia User");
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: C.bg }}>
@@ -1165,23 +1247,9 @@ function LoginModule({ onLogin, initialTab = "login", onBack, onNavigateToSectio
             <button onClick={onBack} style={{ background: "transparent", border: "none", fontSize: 20, cursor: "pointer", color: C.text, marginRight: 8 }}>←</button>
           )}
           <div style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="32" height="32" viewBox="0 0 256 257" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="loginLogoGrad1" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%">
-                  <stop offset="0%" stopColor="#41D1FF"/>
-                  <stop offset="100%" stopColor="#BD34FE"/>
-                </linearGradient>
-                <linearGradient id="loginLogoGrad2" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%">
-                  <stop offset="0%" stopColor="#FFEA83"/>
-                  <stop offset="8.333%" stopColor="#FFDD35"/>
-                  <stop offset="100%" stopColor="#FFA800"/>
-                </linearGradient>
-              </defs>
-              <path fill="url(#loginLogoGrad1)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"/>
-              <path fill="url(#loginLogoGrad2)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"/>
-            </svg>
+            <SynergiaIcon size={32} />
           </div>
-          <span style={{ fontSize: 22, fontWeight: 800, color: C.accent }}>Mazimeal</span>
+          <span style={{ fontSize: 22, fontWeight: 800, color: C.accent }}>Synergia</span>
         </div>
         <nav className="marketing-nav" style={{ display: "flex", alignItems: "center", gap: 20 }}>
           <button onClick={() => handleNavClick('features')} style={{ fontSize: 14, color: C.text, textDecoration: "none", fontWeight: 500, cursor: "pointer", background: "transparent", border: "none" }}>Features</button>
@@ -1298,7 +1366,7 @@ function LoginModule({ onLogin, initialTab = "login", onBack, onNavigateToSectio
                     Secure Access
                   </div>
                   <h2 className="hero-title" style={{ fontSize: 34, color: C.text, marginTop: 8 }}>
-                    {tab === "login" ? "Welcome back to Mazimeal" : "Create your Mazimeal account"}
+                    {tab === "login" ? "Welcome back to Synergia" : "Create your Synergia account"}
                   </h2>
                   <p style={{ color: C.subtext, lineHeight: 1.7, marginTop: 8 }}>
                     {tab === "login"
@@ -1311,7 +1379,13 @@ function LoginModule({ onLogin, initialTab = "login", onBack, onNavigateToSectio
                   {["login", "signup"].map((t) => (
                     <button
                       key={t}
-                      onClick={() => setTab(t)}
+                      onClick={() => {
+                        if (t === "signup" && onSignup) {
+                          onSignup();
+                          return;
+                        }
+                        setTab(t);
+                      }}
                       style={{
                         flex: 1,
                         border: "none",
@@ -1342,7 +1416,7 @@ function LoginModule({ onLogin, initialTab = "login", onBack, onNavigateToSectio
                   {tab === "signup" && (
                     <div>
                       <label>Username</label>
-                      <input placeholder="mazimeal.user" value={username} onChange={(e) => setUsername(e.target.value)} />
+                      <input placeholder="synergia.user" value={username} onChange={(e) => setUsername(e.target.value)} />
                     </div>
                   )}
                   <div>
@@ -1377,7 +1451,17 @@ function LoginModule({ onLogin, initialTab = "login", onBack, onNavigateToSectio
                       </div>
                     </div>
                   )}
-                  <button className="btn-primary" style={{ width: "100%", padding: "13px", fontSize: 15, marginTop: 6 }} onClick={() => onLogin(derivedName)}>
+                  <button
+                    className="btn-primary"
+                    style={{ width: "100%", padding: "13px", fontSize: 15, marginTop: 6 }}
+                    onClick={() => {
+                      if (tab === "signup" && onSignup) {
+                        onSignup();
+                        return;
+                      }
+                      onLogin(derivedName);
+                    }}
+                  >
                     {tab === "login" ? "Enter Nutrition Hub →" : "Create Access & Continue →"}
                   </button>
                 </div>
@@ -1451,23 +1535,9 @@ function CreateAccountModule({ onNext, onBack }) {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button onClick={onBack} style={{ background: "transparent", border: "none", fontSize: 20, cursor: "pointer", color: C.text, marginRight: 8 }}>←</button>
           <div style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="32" height="32" viewBox="0 0 256 257" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="profileLogoGrad1" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%">
-                  <stop offset="0%" stopColor="#41D1FF"/>
-                  <stop offset="100%" stopColor="#BD34FE"/>
-                </linearGradient>
-                <linearGradient id="profileLogoGrad2" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%">
-                  <stop offset="0%" stopColor="#FFEA83"/>
-                  <stop offset="8.333%" stopColor="#FFDD35"/>
-                  <stop offset="100%" stopColor="#FFA800"/>
-                </linearGradient>
-              </defs>
-              <path fill="url(#profileLogoGrad1)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"/>
-              <path fill="url(#profileLogoGrad2)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"/>
-            </svg>
+            <SynergiaIcon size={32} />
           </div>
-          <span style={{ fontSize: 22, fontWeight: 800, color: C.accent }}>Mazimeal</span>
+          <span style={{ fontSize: 22, fontWeight: 800, color: C.accent }}>Synergia</span>
         </div>
         <div style={{ fontSize: 12, color: C.muted, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase" }}>Step 1 of 6</div>
       </header>
@@ -1558,7 +1628,7 @@ function CreateAccountModule({ onNext, onBack }) {
                 )}
                 <div>
                   <div style={{ fontSize: 12, color: C.accent, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase" }}>Account Setup</div>
-                  <h3 className="hero-title" style={{ fontSize: 34, color: C.text, marginTop: 8 }}>Create your Mazimeal account</h3>
+                  <h3 className="hero-title" style={{ fontSize: 34, color: C.text, marginTop: 8 }}>Create your Synergia account</h3>
                   <p style={{ color: C.subtext, lineHeight: 1.7, marginTop: 8 }}>A quick setup keeps your household, preferences, and meal plans ready to go.</p>
                 </div>
 
@@ -1573,7 +1643,7 @@ function CreateAccountModule({ onNext, onBack }) {
                 <div style={{ display: "grid", gap: 14 }}>
                   <div><label>Full Name</label><input placeholder="e.g. Maya Patel" value={name} onChange={e => setName(e.target.value)} /></div>
                   <div><label>Email Address</label><input type="email" placeholder="you@family.com" value={email} onChange={e => setEmail(e.target.value)} /></div>
-                  <div><label>Username</label><input placeholder="mazimeal.user" value={username} onChange={e => setUsername(e.target.value)} /></div>
+                  <div><label>Username</label><input placeholder="synergia.user" value={username} onChange={e => setUsername(e.target.value)} /></div>
                   <div><label>Password</label><input type="password" placeholder="At least 8 characters" value={pw} onChange={e => setPw(e.target.value)} /></div>
                   <div className="captcha-mock">
                     <label htmlFor="captcha" className="captcha-main">
@@ -1663,7 +1733,7 @@ function LegalModule({ onAgree, onBack }) {
         <div style={{ display: "grid", gap: 14, marginBottom: 24 }}>
           <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 14, padding: 18 }}>
             <div style={{ fontWeight: 700, marginBottom: 8 }}>Disclaimer</div>
-            <p style={{ color: C.subtext, fontSize: 14, lineHeight: 1.7 }}>Mazimeal provides nutritional guidance and meal planning suggestions. It is not a substitute for professional medical advice, diagnosis, or treatment.</p>
+            <p style={{ color: C.subtext, fontSize: 14, lineHeight: 1.7 }}>Synergia provides nutritional guidance and meal planning suggestions. It is not a substitute for professional medical advice, diagnosis, or treatment.</p>
           </div>
           <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 14, padding: 18 }}>
             <div style={{ fontWeight: 700, marginBottom: 8 }}>Privacy Policy</div>
@@ -1671,7 +1741,7 @@ function LegalModule({ onAgree, onBack }) {
           </div>
           <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 14, padding: 18 }}>
             <div style={{ fontWeight: 700, marginBottom: 8 }}>Liability Agreement</div>
-            <p style={{ color: C.subtext, fontSize: 14, lineHeight: 1.7 }}>You agree that Mazimeal is not liable for medical decisions made using this guidance. Always consult a healthcare professional for clinical concerns.</p>
+            <p style={{ color: C.subtext, fontSize: 14, lineHeight: 1.7 }}>You agree that Synergia is not liable for medical decisions made using this guidance. Always consult a healthcare professional for clinical concerns.</p>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
@@ -1695,7 +1765,7 @@ function HouseholdSetupModule({ onNext, onBack, household, setHousehold }) {
           <div>
             <div style={{ fontSize: 12, color: C.accent, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>Step 4 of 6 · Household</div>
             <h2 style={{ fontFamily: "'Lora'", fontWeight: 700, fontSize: 28 }}>Household setup</h2>
-            <p style={{ color: C.subtext, fontSize: 14, lineHeight: 1.7 }}>Add your household details so Mazimeal can personalize the plan for your family.</p>
+            <p style={{ color: C.subtext, fontSize: 14, lineHeight: 1.7 }}>Add your household details so Synergia can personalize the plan for your family.</p>
           </div>
           <div style={{ display: "grid", gap: 16 }}>
             <div><label>Household name (optional)</label><input placeholder="Family name or household" value={household.name} onChange={e => setHousehold(h => ({ ...h, name: e.target.value }))} /></div>
@@ -1787,11 +1857,16 @@ function ProfileBasicsModule({ profile, updateProfile, onNext, onBack }) {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               <div>
-                <label>Activity level</label>
-                <select value={profile.activity} onChange={e => updateProfile({ ...profile, activity: e.target.value })}>
-                  <option>Sedentary</option>
-                  <option>Moderate</option>
-                  <option>Active</option>
+                <label>Activity</label>
+                <select value={profile.activityType || "Weight lifting"} onChange={e => updateProfile({ ...profile, activityType: e.target.value })}>
+                  <option>Weight lifting</option>
+                  <option>Gym</option>
+                  <option>Yoga</option>
+                  <option>Biking</option>
+                  <option>Running</option>
+                  <option>Walking</option>
+                  <option>Swimming</option>
+                  <option>Pilates</option>
                 </select>
               </div>
               <div>
@@ -2018,7 +2093,7 @@ function HomeDashboard({ user, setStep, plannerDay }) {
           <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
             <div>
               <div style={{ color: C.accent, fontSize: 12, fontWeight: 700, letterSpacing: 1.4, textTransform: "uppercase" }}>Daily Command Center</div>
-              <h1 className="hero-title" style={{ fontSize: 42, color: C.text, marginTop: 8 }}>Welcome back, {user || "Mazimeal"}</h1>
+              <h1 className="hero-title" style={{ fontSize: 42, color: C.text, marginTop: 8 }}>Welcome back, {user || "Synergia"}</h1>
               <p style={{ color: C.subtext, marginTop: 10, maxWidth: 620 }}>Your household has a strong week in progress. Keep momentum with today’s smart meal blocks and adaptive suggestions.</p>
             </div>
             <div className="bento-card" style={{ minWidth: 210 }}>
@@ -2112,6 +2187,7 @@ function HomeDashboardClassic({
   const [showStreakCelebration, setShowStreakCelebration] = useState(false);
   const [assistantMessageIndex, setAssistantMessageIndex] = useState(0);
   const [classicCookMeal, setClassicCookMeal] = useState(null);
+  const [showCalorieGoalTip, setShowCalorieGoalTip] = useState(false);
 
   const items = plannerDay
     ? plannerDay.mealOrder.map((slot) => {
@@ -2123,7 +2199,7 @@ function HomeDashboardClassic({
           calories: meal.calories,
           protein: meal.protein,
           image: meal.image,
-          nutrients: meal.nutrients || {},
+          nutrients: getDisplayNutrientProfile(meal),
           sideSuggestion: meal.sideSuggestion || "",
           sideSuggestionSource: meal.sideSuggestionSource || "",
         };
@@ -2167,6 +2243,7 @@ function HomeDashboardClassic({
     items.reduce((acc, item) => {
       const calories = item.calories || 1;
       Object.entries(item.nutrients || {}).forEach(([rawLabel, rawValue]) => {
+        if (!isDisplayNutrient(rawLabel)) return;
         const value = Number(rawValue);
         if (!Number.isFinite(value)) return;
         if (!acc[rawLabel]) {
@@ -2314,9 +2391,20 @@ function HomeDashboardClassic({
     setActiveClassicModal(null);
   };
 
+  const updateHydrationCount = (nextCount) => {
+    const water = Math.max(0, Math.min(8, Number(nextCount || 0)));
+    setHydrationByDay((current) => ({
+      ...current,
+      [dayLogKey]: {
+        ...(current[dayLogKey] || defaultHydrationLog),
+        water,
+      },
+    }));
+    setHydrationForm((current) => ({ ...current, water }));
+  };
+
   const quickActions = [
-    ["hydration", "💧", "Hydration"],
-    ["meal", "🍽️", "Log Meal"],
+    ["hydration", "💧", "Log Hydration"],
     ["sleep", "🌙", "Sleep Log"],
     ["streak", "🔥", "Streaks"],
   ];
@@ -2403,7 +2491,13 @@ function HomeDashboardClassic({
                   <div>
                     <div style={{ fontSize: 20, fontWeight: 800, color: "#E57A00", lineHeight: 1 }}>{calorieAlignment}%</div>
                     <div
-                      title={calorieGoalExplanation}
+                      role="button"
+                      tabIndex={0}
+                      aria-describedby="calorie-goal-tooltip"
+                      onMouseEnter={() => setShowCalorieGoalTip(true)}
+                      onMouseLeave={() => setShowCalorieGoalTip(false)}
+                      onFocus={() => setShowCalorieGoalTip(true)}
+                      onBlur={() => setShowCalorieGoalTip(false)}
                       style={{
                         fontSize: 11,
                         color: "#6E7991",
@@ -2416,6 +2510,33 @@ function HomeDashboardClassic({
                     >
                       of your calorie goal
                     </div>
+                    {showCalorieGoalTip && (
+                      <div
+                        id="calorie-goal-tooltip"
+                        role="tooltip"
+                        style={{
+                          position: "absolute",
+                          left: "50%",
+                          top: 10,
+                          transform: "translateX(-50%)",
+                          zIndex: 6,
+                          width: 204,
+                          maxWidth: "calc(100vw - 32px)",
+                          padding: "8px 10px",
+                          borderRadius: 8,
+                          background: "rgba(43, 48, 56, 0.94)",
+                          color: "#FFFFFF",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          lineHeight: 1.35,
+                          textAlign: "left",
+                          boxShadow: "0 10px 24px rgba(28, 34, 43, 0.24)",
+                          pointerEvents: "none",
+                        }}
+                      >
+                        {calorieGoalExplanation}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2437,8 +2558,8 @@ function HomeDashboardClassic({
           </div>
 
           <div style={{ padding: 18 }}>
-            <div style={{ fontFamily: "'Lora'", fontWeight: 700, fontSize: 18, color: "#163F77", marginBottom: 8 }}>Nutrients</div>
-            <div style={{ color: "#72829B", fontSize: 12, marginBottom: 14 }}>Top 5 nutrient strengths from your selected planner day</div>
+            <div style={{ fontFamily: "'Lora'", fontWeight: 700, fontSize: 18, color: "#163F77", marginBottom: 8 }}>Nutrients & Minerals</div>
+            <div style={{ color: "#72829B", fontSize: 12, marginBottom: 14 }}>Top 5 strengths from the recipes in your selected planner day</div>
             {topNutrients.map((nutrient, index) => (
               <div key={nutrient.label} style={{ display: "grid", gridTemplateColumns: "132px 1fr 42px", gap: 12, alignItems: "center", marginBottom: 12 }}>
                 <div style={{ color: "#273C64", fontWeight: 700, fontSize: 15 }}>{nutrient.label}</div>
@@ -2453,34 +2574,6 @@ function HomeDashboardClassic({
           <div style={{ padding: 18, borderLeft: "1px solid #E4E8F0", background: "linear-gradient(180deg, #FFFEFB, #F8FBFF)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
               <div style={{ fontFamily: "'Lora'", fontWeight: 700, fontSize: 18, color: "#163F77" }}>Hydration</div>
-              <button
-                onClick={() => setActiveClassicModal("hydration")}
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 8,
-                  border: "1.5px solid #90CAF9",
-                  background: "linear-gradient(180deg, #E3F2FF, #D3E7FB)",
-                  color: "#1565C0",
-                  fontWeight: 700,
-                  fontSize: 18,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transition: "all 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "linear-gradient(180deg, #C3E9FF, #B3E5FC)";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(21, 101, 192, 0.2)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "linear-gradient(180deg, #E3F2FF, #D3E7FB)";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-              >
-                +
-              </button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 106px", gap: 14, alignItems: "start" }}>
               <div>
@@ -2501,9 +2594,14 @@ function HomeDashboardClassic({
             <div style={{ display: "grid", gridTemplateColumns: "repeat(8, minmax(0, 1fr))", gap: 6, marginTop: 16 }}>
               {Array.from({ length: 8 }, (_, index) => {
                 const filled = index < hydrationCount;
+                const nextCount = index + 1;
                 return (
-                  <div
+                  <button
                     key={index}
+                    type="button"
+                    aria-label={`Set hydration to ${nextCount} glass${nextCount === 1 ? "" : "es"}`}
+                    aria-pressed={filled}
+                    onClick={() => updateHydrationCount(nextCount)}
                     style={{
                       height: 56,
                       borderRadius: "8px 8px 12px 12px",
@@ -2512,9 +2610,26 @@ function HomeDashboardClassic({
                       position: "relative",
                       overflow: "hidden",
                       clipPath: "polygon(18% 0%, 82% 0%, 94% 100%, 6% 100%)",
+                      cursor: "pointer",
+                      padding: 0,
                       boxShadow: filled
                         ? "0 6px 12px rgba(109, 178, 235, 0.14), inset 0 1px 0 rgba(255,255,255,0.96)"
                         : "inset 0 1px 0 rgba(255,255,255,0.86)",
+                      transition: "transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.borderColor = "#8BBDE8";
+                      e.currentTarget.style.boxShadow = filled
+                        ? "0 8px 16px rgba(109, 178, 235, 0.22), inset 0 1px 0 rgba(255,255,255,0.96)"
+                        : "0 6px 14px rgba(109, 178, 235, 0.12), inset 0 1px 0 rgba(255,255,255,0.86)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.borderColor = filled ? "#AFC6DB" : "#D7DFEB";
+                      e.currentTarget.style.boxShadow = filled
+                        ? "0 6px 12px rgba(109, 178, 235, 0.14), inset 0 1px 0 rgba(255,255,255,0.96)"
+                        : "inset 0 1px 0 rgba(255,255,255,0.86)";
                     }}
                   >
                     <div
@@ -2566,7 +2681,7 @@ function HomeDashboardClassic({
                         background: "rgba(185, 197, 210, 0.55)",
                       }}
                     />
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -2580,20 +2695,32 @@ function HomeDashboardClassic({
       <div className="card" style={{ ...plannerInspiredShell, padding: 0, overflow: "hidden" }}>
         <div style={{ position: "relative", minHeight: 380, background: "linear-gradient(180deg, rgba(255,253,248,0.96), rgba(248,245,238,0.94))" }}>
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(255,255,255,0.18), rgba(245,241,232,0.74))" }} />
-          <div style={{ position: "relative", zIndex: 1, padding: "28px 28px 24px", display: "grid", gridTemplateColumns: "minmax(0, 1.45fr) minmax(280px, 1fr)", gap: 18, alignItems: "start" }}>
-            <div style={{ display: "grid", gap: 18 }}>
-              <div style={{ color: C.accent, fontSize: 13, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase" }}>Today’s Menu</div>
-              <div style={{ fontFamily: "'Lora'", fontWeight: 700, fontSize: 32, color: "#163F77", lineHeight: 1.05 }}>
-                Stuffed pepper tray · 510 kcal · Prep: 25 min
+          <div style={{ position: "relative", zIndex: 1, padding: "28px 28px 24px", display: "grid", gridTemplateColumns: "minmax(0, 1.45fr) minmax(280px, 1fr)", gap: 18, alignItems: "stretch" }}>
+            <div style={{ minHeight: 342, display: "flex", flexDirection: "column", gap: 16 }}>
+              <div
+                style={{
+                  ...plannerInspiredGlass,
+                  borderRadius: 24,
+                  padding: 22,
+                  background: "rgba(255,255,255,0.94)",
+                }}
+              >
+                <div style={{ display: "grid", gap: 16 }}>
+                  <div style={{ color: C.accent, fontSize: 13, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase" }}>Today’s Menu</div>
+                  <div style={{ fontFamily: "'Lora'", fontWeight: 700, fontSize: 32, color: "#163F77", lineHeight: 1.05 }}>
+                    Stuffed pepper tray · 510 kcal · Prep: 25 min
+                  </div>
+                  <div style={{ color: "#4A607A", fontSize: 15, lineHeight: 1.75, maxWidth: 620 }}>
+                    A warm, satisfying dinner that keeps your energy steady with bright vegetables, punchy seasoning, and smart portion rhythm.
+                  </div>
+                </div>
               </div>
-              <div style={{ color: "#4A607A", fontSize: 15, lineHeight: 1.75, maxWidth: 620 }}>
-                A warm, satisfying dinner that keeps your energy steady with bright vegetables, punchy seasoning, and smart portion rhythm.
-              </div>
-              <div style={{ display: "grid", gap: 12, marginTop: 8 }}>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+
+              <div style={{ display: "grid", gap: 12, marginTop: "auto" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(130px, 1fr))", gap: 10 }}>
                   <button
-                    className="btn-primary"
-                    style={{ background: "linear-gradient(180deg, #4EA0F1, #2A6FB3)", borderColor: "#2A6FB3", minWidth: 140 }}
+                    className="btn-ghost"
+                    style={{ background: "#F9FBFF", borderColor: "#CCD5E5", color: "#24487B", minHeight: 44 }}
                     onClick={() => {
                       setClassicCookMeal(highlightedMeal);
                       setActiveClassicModal("cook");
@@ -2601,23 +2728,22 @@ function HomeDashboardClassic({
                   >
                     Cook Now
                   </button>
-                  <button className="btn-ghost" style={{ background: "#F9FBFF", borderColor: "#CCD5E5", color: "#24487B" }} onClick={() => setActiveClassicModal("meal")}>Log Meal</button>
                   <button
                     className="btn-ghost"
-                    style={{ background: "#F9FBFF", borderColor: "#CCD5E5", color: "#24487B" }}
+                    style={{ background: "#F9FBFF", borderColor: "#CCD5E5", color: "#24487B", minHeight: 44 }}
                     onClick={() => setStep("recipesClassic")}
                   >
                     View Alternatives ›
                   </button>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(120px, 1fr))", gap: 10 }}>
                   <button
                     type="button"
                     className="btn-ghost"
                     onClick={() => setActiveClassicModal("hydration")}
                     style={{ background: "#F9FBFF", borderColor: "#CCD5E5", color: "#24487B", minHeight: 44 }}
                   >
-                    💧 Hydration
+                    💧 Log Hydration
                   </button>
                   <button
                     type="button"
@@ -2691,6 +2817,7 @@ function HomeDashboardClassic({
               boxShadow: "0 22px 60px rgba(196, 138, 38, 0.24)",
               textAlign: "center",
               overflow: "hidden",
+              pointerEvents: "auto",
             }}
           >
             <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at center, rgba(255, 222, 143, 0.28), transparent 58%)" }} />
@@ -2710,6 +2837,27 @@ function HomeDashboardClassic({
                 }}
               />
             ))}
+            <button
+              type="button"
+              onClick={() => setShowStreakCelebration(false)}
+              style={{
+                position: "absolute",
+                top: 12,
+                right: 12,
+                zIndex: 2,
+                border: "1px solid #E1CF9E",
+                background: "rgba(255, 253, 248, 0.88)",
+                color: "#6B3A12",
+                borderRadius: 999,
+                padding: "6px 12px",
+                fontSize: 12,
+                fontWeight: 800,
+                cursor: "pointer",
+                boxShadow: "0 4px 12px rgba(107, 58, 18, 0.12)",
+              }}
+            >
+              Close
+            </button>
             <div style={{ position: "relative", zIndex: 1 }}>
               <div style={{ fontFamily: "'Lora'", fontWeight: 700, fontSize: 20, color: "#6B3A12" }}>🔥 Streak Unlocked!</div>
               <div style={{ color: "#2B4265", fontWeight: 600, marginTop: 14, fontSize: 15 }}>You've cooked 3 days in a row - keep the momentum going.</div>
@@ -2982,6 +3130,8 @@ function HomeDashboardClassic({
 
 function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlannerState, selectedDayIndex }) {
   const [search, setSearch] = useState("");
+  const [ingredientSearchDraft, setIngredientSearchDraft] = useState("");
+  const [recipePage, setRecipePage] = useState(1);
   const [selectedPrep, setSelectedPrep] = useState("Prep Time");
   const [selectedMealType, setSelectedMealType] = useState("Meal Type");
   const [selectedDietary, setSelectedDietary] = useState("Dietary Needs");
@@ -2990,7 +3140,7 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
   const [selectedCuisine, setSelectedCuisine] = useState("Cuisine");
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("Salads");
-  const [activeRecipeSection, setActiveRecipeSection] = useState(null);
+  const [activeRecipeSection, setActiveRecipeSection] = useState("explore");
   const [showAddToPlanModal, setShowAddToPlanModal] = useState(false);
   const [selectedPlanMealSlot, setSelectedPlanMealSlot] = useState("dinner");
   const [selectedPlanStartDayIndex, setSelectedPlanStartDayIndex] = useState(0);
@@ -3000,7 +3150,7 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
   const [smartPickToast, setSmartPickToast] = useState("");
   const [frequentlyUsedRecipes, setFrequentlyUsedRecipes] = useState(() => {
     try {
-      const stored = localStorage.getItem(`mazimeal:frequently-used-recipes:${user || "guest"}`);
+      const stored = localStorage.getItem(`synergia:frequently-used-recipes:${user || "guest"}`);
       return stored ? JSON.parse(stored) : ["salmon", "stir-fry", "quinoa"];
     } catch {
       return ["salmon", "stir-fry", "quinoa"];
@@ -3009,7 +3159,7 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
 
   const [favoriteRecipes, setFavoriteRecipes] = useState(() => {
     try {
-      const stored = localStorage.getItem(`mazimeal:favorite-recipes:${user || "guest"}`);
+      const stored = localStorage.getItem(`synergia:favorite-recipes:${user || "guest"}`);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -3625,6 +3775,275 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
     },
   ];
 
+  const cuisineRecipeImages = {
+    Mediterranean: {
+      Breakfast: "https://images.unsplash.com/photo-1494597564530-871f2b93ac55?auto=format&fit=crop&w=1400&q=80",
+      Lunch: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1400&q=80",
+      Dinner: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=1400&q=80",
+      Snack: "https://images.unsplash.com/photo-1514995669114-6081e934b693?auto=format&fit=crop&w=1400&q=80",
+    },
+    American: {
+      Breakfast: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=1400&q=80",
+      Lunch: "https://images.unsplash.com/photo-1551248429-40975aa4de74?auto=format&fit=crop&w=1400&q=80",
+      Dinner: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=1400&q=80",
+      Snack: "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1400&q=80",
+    },
+    Italian: {
+      Breakfast: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1400&q=80",
+      Lunch: "https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&fit=crop&w=1400&q=80",
+      Dinner: "https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?auto=format&fit=crop&w=1400&q=80",
+      Snack: "https://images.unsplash.com/photo-1483695028939-5bb13f8648b0?auto=format&fit=crop&w=1400&q=80",
+    },
+  };
+
+  const cuisineRecipeSeeds = [
+    {
+      cuisine: "Mediterranean",
+      recipes: [
+        ["Breakfast", "Greek Yogurt Honey Bowl", ["Greek yogurt", "Honey", "Walnuts", "Berries", "Chia seeds"]],
+        ["Breakfast", "Mediterranean Egg Toast", ["Eggs", "Whole grain toast", "Tomato", "Feta", "Parsley"]],
+        ["Breakfast", "Fig Almond Overnight Oats", ["Rolled oats", "Figs", "Almonds", "Greek yogurt", "Cinnamon"]],
+        ["Breakfast", "Spinach Feta Egg Cups", ["Eggs", "Spinach", "Feta", "Bell pepper", "Olive oil"]],
+        ["Breakfast", "Cucumber Labneh Breakfast Plate", ["Labneh", "Cucumber", "Tomatoes", "Olives", "Pita"]],
+        ["Lunch", "Lemon Chicken Couscous Bowl", ["Chicken", "Couscous", "Cucumber", "Tomato", "Lemon"]],
+        ["Lunch", "Falafel Power Salad", ["Falafel", "Romaine", "Chickpeas", "Tahini", "Pickled onion"]],
+        ["Lunch", "Tuna White Bean Pita", ["Tuna", "White beans", "Pita", "Arugula", "Lemon"]],
+        ["Lunch", "Mediterranean Lentil Box", ["Lentils", "Feta", "Cucumber", "Tomato", "Mint"]],
+        ["Lunch", "Za'atar Turkey Wrap", ["Turkey", "Whole wheat wrap", "Za'atar", "Hummus", "Greens"]],
+        ["Dinner", "Garlic Shrimp Orzo", ["Shrimp", "Orzo", "Garlic", "Spinach", "Lemon"]],
+        ["Dinner", "Chicken Souvlaki Plate", ["Chicken", "Greek yogurt", "Pita", "Cucumber", "Tomato"]],
+        ["Dinner", "Baked Cod with Tomatoes", ["Cod", "Tomatoes", "Olives", "Capers", "Parsley"]],
+        ["Dinner", "Turkey Kofta Bowl", ["Ground turkey", "Couscous", "Cucumber", "Tahini", "Herbs"]],
+        ["Dinner", "Eggplant Chickpea Stew", ["Eggplant", "Chickpeas", "Tomatoes", "Cumin", "Parsley"]],
+        ["Snack", "Hummus Cucumber Cups", ["Hummus", "Cucumber", "Paprika", "Olive oil", "Parsley"]],
+        ["Snack", "Feta Olive Snack Plate", ["Feta", "Olives", "Tomatoes", "Pita chips", "Oregano"]],
+        ["Snack", "Date Almond Bites", ["Dates", "Almonds", "Oats", "Cocoa", "Sea salt"]],
+        ["Snack", "Tzatziki Carrot Dippers", ["Greek yogurt", "Carrots", "Cucumber", "Dill", "Garlic"]],
+        ["Snack", "Roasted Chickpea Crunch", ["Chickpeas", "Olive oil", "Paprika", "Cumin", "Lemon zest"]],
+      ],
+    },
+    {
+      cuisine: "American",
+      recipes: [
+        ["Breakfast", "Turkey Sausage Egg Muffins", ["Eggs", "Turkey sausage", "Spinach", "Cheddar", "Bell pepper"]],
+        ["Breakfast", "Blueberry Protein Pancakes", ["Oats", "Eggs", "Blueberries", "Greek yogurt", "Maple"]],
+        ["Breakfast", "Avocado Breakfast Sandwich", ["Egg", "Avocado", "English muffin", "Tomato", "Spinach"]],
+        ["Breakfast", "Apple Cinnamon Oatmeal", ["Oats", "Apple", "Cinnamon", "Walnuts", "Milk"]],
+        ["Breakfast", "Cottage Cheese Berry Bowl", ["Cottage cheese", "Berries", "Granola", "Honey", "Flax"]],
+        ["Lunch", "Grilled Chicken Cobb Bowl", ["Chicken", "Romaine", "Egg", "Avocado", "Tomato"]],
+        ["Lunch", "Turkey Cheddar Lunch Wrap", ["Turkey", "Cheddar", "Whole wheat wrap", "Lettuce", "Mustard"]],
+        ["Lunch", "BBQ Chicken Grain Bowl", ["Chicken", "Brown rice", "Corn", "Black beans", "BBQ sauce"]],
+        ["Lunch", "Apple Walnut Chicken Salad", ["Chicken", "Apple", "Walnuts", "Celery", "Greek yogurt"]],
+        ["Lunch", "Veggie Burger Lunch Plate", ["Veggie burger", "Sweet potato", "Greens", "Tomato", "Pickles"]],
+        ["Dinner", "Sheet Pan Turkey Meatloaf", ["Turkey", "Oats", "Carrots", "Green beans", "Tomato glaze"]],
+        ["Dinner", "Lemon Herb Chicken Tray", ["Chicken", "Potatoes", "Broccoli", "Lemon", "Herbs"]],
+        ["Dinner", "Salmon Sweet Potato Plate", ["Salmon", "Sweet potato", "Asparagus", "Lemon", "Olive oil"]],
+        ["Dinner", "Lean Beef Taco Skillet", ["Lean beef", "Black beans", "Corn", "Tomato", "Cheddar"]],
+        ["Dinner", "Chicken Veggie Pot Pie Bowl", ["Chicken", "Peas", "Carrots", "Potatoes", "Light gravy"]],
+        ["Snack", "Peanut Butter Apple Stack", ["Apple", "Peanut butter", "Granola", "Cinnamon", "Chia"]],
+        ["Snack", "Ranch Greek Yogurt Veggies", ["Greek yogurt", "Carrots", "Celery", "Cucumber", "Ranch herbs"]],
+        ["Snack", "Trail Mix Protein Cup", ["Almonds", "Pumpkin seeds", "Dried cranberries", "Dark chocolate", "Pretzels"]],
+        ["Snack", "Banana Oat Energy Bites", ["Banana", "Oats", "Peanut butter", "Flax", "Chocolate chips"]],
+        ["Snack", "Cheddar Turkey Roll-Ups", ["Turkey", "Cheddar", "Spinach", "Whole grain crackers", "Mustard"]],
+      ],
+    },
+    {
+      cuisine: "Italian",
+      recipes: [
+        ["Breakfast", "Ricotta Berry Toast", ["Whole grain toast", "Ricotta", "Berries", "Honey", "Basil"]],
+        ["Breakfast", "Tomato Basil Egg Bake", ["Eggs", "Tomatoes", "Basil", "Mozzarella", "Spinach"]],
+        ["Breakfast", "Cappuccino Overnight Oats", ["Oats", "Milk", "Espresso", "Greek yogurt", "Cocoa"]],
+        ["Breakfast", "Italian Veggie Frittata", ["Eggs", "Zucchini", "Tomato", "Parmesan", "Parsley"]],
+        ["Breakfast", "Peach Mascarpone Yogurt Bowl", ["Greek yogurt", "Peach", "Mascarpone", "Almonds", "Honey"]],
+        ["Lunch", "Tuscan White Bean Salad", ["White beans", "Tomatoes", "Arugula", "Parmesan", "Olive oil"]],
+        ["Lunch", "Chicken Pesto Panini", ["Chicken", "Pesto", "Ciabatta", "Mozzarella", "Tomato"]],
+        ["Lunch", "Caprese Farro Bowl", ["Farro", "Mozzarella", "Tomatoes", "Basil", "Balsamic"]],
+        ["Lunch", "Italian Tuna Pasta Salad", ["Tuna", "Pasta", "Olives", "Tomatoes", "Parsley"]],
+        ["Lunch", "Minestrone Lunch Cup", ["Beans", "Pasta", "Carrots", "Celery", "Tomato broth"]],
+        ["Dinner", "Turkey Bolognese Pasta", ["Turkey", "Pasta", "Tomatoes", "Carrots", "Parmesan"]],
+        ["Dinner", "Chicken Piccata Plate", ["Chicken", "Lemon", "Capers", "Green beans", "Polenta"]],
+        ["Dinner", "Shrimp Pesto Zoodles", ["Shrimp", "Zucchini noodles", "Pesto", "Tomatoes", "Parmesan"]],
+        ["Dinner", "Sausage Pepper Bake", ["Chicken sausage", "Bell peppers", "Onion", "Tomatoes", "Mozzarella"]],
+        ["Dinner", "Eggplant Parmesan Bowl", ["Eggplant", "Marinara", "Mozzarella", "Parmesan", "Basil"]],
+        ["Snack", "Tomato Mozzarella Skewers", ["Cherry tomatoes", "Mozzarella", "Basil", "Balsamic", "Olive oil"]],
+        ["Snack", "Parmesan Zucchini Chips", ["Zucchini", "Parmesan", "Breadcrumbs", "Italian herbs", "Egg"]],
+        ["Snack", "Cannellini Herb Dip", ["Cannellini beans", "Garlic", "Lemon", "Rosemary", "Olive oil"]],
+        ["Snack", "Mini Ricotta Toasts", ["Whole grain toast", "Ricotta", "Tomato", "Basil", "Pepper"]],
+        ["Snack", "Italian Trail Snack Mix", ["Almonds", "Dried cherries", "Pumpkin seeds", "Dark chocolate", "Orange zest"]],
+      ],
+    },
+  ];
+
+  const expandedCuisineRecipes = cuisineRecipeSeeds.flatMap(({ cuisine, recipes }) =>
+    recipes.map(([mealType, title, ingredients], index) => {
+      const isSnack = mealType === "Snack";
+      const isBreakfast = mealType === "Breakfast";
+      const prep = isSnack ? "10 min" : index % 3 === 0 ? "15 min" : index % 3 === 1 ? "20 min" : "30 min+";
+      const calories = isSnack ? 180 + (index % 5) * 25 : isBreakfast ? 260 + (index % 5) * 30 : mealType === "Lunch" ? 310 + (index % 5) * 35 : 360 + (index % 5) * 40;
+      const dietary = isSnack || prep === "10 min" ? "Quick Meal" : index % 4 === 0 ? "High Protein" : index % 4 === 1 ? "Family Friendly" : index % 4 === 2 ? "Vegetarian" : "Low Carb";
+      const category = isSnack || prep === "10 min" ? "Quick Meals" : title.includes("Salad") ? "Salads" : title.includes("Soup") || title.includes("Minestrone") ? "Soups" : title.includes("Pasta") || title.includes("Bolognese") ? "Pasta" : title.includes("Bowl") ? "Bowls" : mealType;
+
+      return {
+        id: `${cuisine.toLowerCase()}-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`,
+        title,
+        subtitle: `${cuisine} ${mealType.toLowerCase()} built around ${ingredients.slice(0, 3).join(", ")}.`,
+        cuisine,
+        prep,
+        calories,
+        difficulty: prep === "30 min+" ? "Medium" : "Easy",
+        mealType,
+        dietary,
+        categories: [category, ...(category !== "Quick Meals" && prep !== "30 min+" ? ["Quick Meals"] : [])],
+        badge: `${cuisine} ${mealType}`,
+        badgeTone: { bg: "#EEF4FF", border: "#D3E0F8", color: "#4B78B6" },
+        image: cuisineRecipeImages[cuisine][mealType],
+        cardTag: { label: dietary, color: dietary === "High Protein" ? "#F0B23D" : dietary === "Vegetarian" ? "#67A94B" : dietary === "Low Carb" ? "#58A63D" : "#4B8CCC" },
+        ingredients,
+        steps: [
+          `Prep ${ingredients.slice(0, 2).join(" and ").toLowerCase()}.`,
+          `Combine with ${ingredients.slice(2, 4).join(" and ").toLowerCase()} for balanced flavor.`,
+          "Finish, portion, and serve fresh.",
+        ],
+        swapInsight: `Swap ${ingredients[0].toLowerCase()} with a similar favorite if needed.`,
+        reflection: `A reliable ${cuisine.toLowerCase()} ${mealType.toLowerCase()} option for the weekly plan.`,
+        nutrientStory: isSnack ? ["Portable Energy", "Fiber Boost", "Snack Satiety"] : ["Protein First", "Fiber Build", "Balanced Plate"],
+        macro: {
+          protein: isSnack ? 8 + (index % 4) * 2 : 16 + (index % 5) * 4,
+          carbs: isSnack ? 18 + (index % 5) * 4 : 24 + (index % 5) * 5,
+          fats: isSnack ? 7 + (index % 4) * 2 : 8 + (index % 5) * 3,
+        },
+      };
+    })
+  );
+
+  const extraAmericanRecipeSeeds = [
+    ["Breakfast", "Sweet Potato Breakfast Hash", ["Sweet potato", "Eggs", "Turkey bacon", "Spinach", "Scallions"]],
+    ["Breakfast", "Denver Egg White Scramble", ["Egg whites", "Ham", "Bell peppers", "Onion", "Cheddar"]],
+    ["Breakfast", "Pumpkin Spice Protein Oats", ["Oats", "Pumpkin puree", "Protein powder", "Cinnamon", "Pecans"]],
+    ["Breakfast", "Breakfast Taco Plate", ["Eggs", "Corn tortillas", "Black beans", "Salsa", "Avocado"]],
+    ["Breakfast", "Maple Pecan Cottage Bowl", ["Cottage cheese", "Pecans", "Maple", "Berries", "Granola"]],
+    ["Lunch", "Buffalo Chicken Lettuce Wraps", ["Chicken", "Romaine leaves", "Buffalo sauce", "Celery", "Greek yogurt ranch"]],
+    ["Lunch", "Turkey Cranberry Grain Bowl", ["Turkey", "Quinoa", "Cranberries", "Greens", "Walnuts"]],
+    ["Lunch", "Classic Chef Salad Box", ["Turkey", "Egg", "Romaine", "Cucumber", "Tomato"]],
+    ["Lunch", "Loaded Baked Potato Bowl", ["Potato", "Greek yogurt", "Broccoli", "Cheddar", "Turkey bacon"]],
+    ["Lunch", "Chicken Apple Slaw Sandwich", ["Chicken", "Apple slaw", "Whole grain bread", "Celery", "Mustard"]],
+    ["Dinner", "Cajun Chicken Rice Skillet", ["Chicken", "Brown rice", "Peppers", "Cajun seasoning", "Tomatoes"]],
+    ["Dinner", "Turkey Stuffed Bell Peppers", ["Turkey", "Bell peppers", "Rice", "Tomatoes", "Cheddar"]],
+    ["Dinner", "Maple Mustard Pork Tenderloin", ["Pork tenderloin", "Maple mustard", "Green beans", "Sweet potato", "Thyme"]],
+    ["Dinner", "BBQ Salmon Corn Plate", ["Salmon", "Corn", "Green beans", "BBQ glaze", "Lemon"]],
+    ["Dinner", "Chicken Chili Bean Bowl", ["Chicken", "White beans", "Corn", "Green chiles", "Avocado"]],
+    ["Snack", "Cinnamon Apple Yogurt Dip", ["Greek yogurt", "Apple slices", "Cinnamon", "Honey", "Walnuts"]],
+    ["Snack", "Mini Chicken Salad Cups", ["Chicken", "Celery", "Greek yogurt", "Lettuce cups", "Grapes"]],
+    ["Snack", "Popcorn Trail Crunch", ["Popcorn", "Almonds", "Pumpkin seeds", "Dried cherries", "Dark chocolate"]],
+    ["Snack", "Sweet Potato Toast Bites", ["Sweet potato", "Peanut butter", "Banana", "Chia", "Cinnamon"]],
+    ["Snack", "Cucumber Turkey Pinwheels", ["Turkey", "Cucumber", "Cream cheese", "Spinach", "Everything seasoning"]],
+  ];
+
+  const extraAmericanRecipes = extraAmericanRecipeSeeds.map(([mealType, title, ingredients], index) => {
+    const isSnack = mealType === "Snack";
+    const isBreakfast = mealType === "Breakfast";
+    const prep = isSnack ? "10 min" : index % 3 === 0 ? "15 min" : index % 3 === 1 ? "20 min" : "30 min+";
+    const calories = isSnack ? 170 + (index % 5) * 25 : isBreakfast ? 270 + (index % 5) * 30 : mealType === "Lunch" ? 320 + (index % 5) * 35 : 380 + (index % 5) * 40;
+    const dietary = isSnack || prep === "10 min" ? "Quick Meal" : index % 4 === 0 ? "High Protein" : index % 4 === 1 ? "Family Friendly" : index % 4 === 2 ? "Low Carb" : "Vegetarian";
+    const category = isSnack || prep === "10 min" ? "Quick Meals" : title.includes("Salad") || title.includes("Slaw") ? "Salads" : title.includes("Bowl") || title.includes("Hash") ? "Bowls" : mealType;
+
+    return {
+      id: `american-extra-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`,
+      title,
+      subtitle: `American ${mealType.toLowerCase()} with ${ingredients.slice(0, 3).join(", ")}.`,
+      cuisine: "American",
+      prep,
+      calories,
+      difficulty: prep === "30 min+" ? "Medium" : "Easy",
+      mealType,
+      dietary,
+      categories: [category, ...(category !== "Quick Meals" && prep !== "30 min+" ? ["Quick Meals"] : [])],
+      badge: `American ${mealType}`,
+      badgeTone: { bg: "#FFF4E3", border: "#F2D29D", color: "#C8841A" },
+      image: cuisineRecipeImages.American[mealType],
+      cardTag: { label: dietary, color: dietary === "High Protein" ? "#F0B23D" : dietary === "Low Carb" ? "#58A63D" : dietary === "Vegetarian" ? "#67A94B" : "#4B8CCC" },
+      ingredients,
+      steps: [
+        `Prep ${ingredients.slice(0, 2).join(" and ").toLowerCase()}.`,
+        `Layer with ${ingredients.slice(2, 4).join(" and ").toLowerCase()} for a balanced plate.`,
+        "Finish, portion, and serve fresh.",
+      ],
+      swapInsight: `Swap ${ingredients[0].toLowerCase()} with a similar American favorite if needed.`,
+      reflection: `A unique American ${mealType.toLowerCase()} option for flexible meal planning.`,
+      nutrientStory: isSnack ? ["Snack Satiety", "Portable Energy", "Balanced Bite"] : ["Protein First", "Fiber Build", "Steady Energy"],
+      macro: {
+        protein: isSnack ? 9 + (index % 4) * 2 : 18 + (index % 5) * 4,
+        carbs: isSnack ? 16 + (index % 5) * 4 : 24 + (index % 5) * 5,
+        fats: isSnack ? 7 + (index % 4) * 2 : 9 + (index % 5) * 3,
+      },
+    };
+  });
+
+  const carbCombinationSeeds = [
+    ["Breakfast", "Banana Berry Oat Combo", ["Oats", "Banana", "Blueberries", "Greek yogurt", "Chia"]],
+    ["Breakfast", "Sweet Potato Egg Breakfast Bowl", ["Sweet potato", "Eggs", "Spinach", "Avocado", "Salsa"]],
+    ["Breakfast", "Apple Cinnamon Quinoa Porridge", ["Quinoa", "Apple", "Cinnamon", "Walnuts", "Milk"]],
+    ["Breakfast", "Whole Grain Toast Fruit Plate", ["Whole grain toast", "Peanut butter", "Strawberries", "Cottage cheese", "Honey"]],
+    ["Breakfast", "Berry Granola Yogurt Stack", ["Granola", "Greek yogurt", "Mixed berries", "Flax", "Almond butter"]],
+    ["Lunch", "Brown Rice Bean Carb Bowl", ["Brown rice", "Black beans", "Corn", "Avocado", "Lime"]],
+    ["Lunch", "Turkey Pasta Veggie Salad", ["Pasta", "Turkey", "Cucumber", "Tomatoes", "Light vinaigrette"]],
+    ["Lunch", "Quinoa Chickpea Power Plate", ["Quinoa", "Chickpeas", "Spinach", "Feta", "Lemon"]],
+    ["Lunch", "Farro Chicken Harvest Bowl", ["Farro", "Chicken", "Sweet potato", "Kale", "Pumpkin seeds"]],
+    ["Lunch", "Lentil Rice Lunch Stew", ["Lentils", "Rice", "Carrots", "Celery", "Tomato broth"]],
+    ["Dinner", "Salmon Rice Sweet Potato Plate", ["Salmon", "Brown rice", "Sweet potato", "Asparagus", "Lemon"]],
+    ["Dinner", "Chicken Pasta Broccoli Bake", ["Chicken", "Pasta", "Broccoli", "Tomato sauce", "Mozzarella"]],
+    ["Dinner", "Turkey Quinoa Stuffed Peppers", ["Turkey", "Quinoa", "Bell peppers", "Tomatoes", "Cheddar"]],
+    ["Dinner", "Shrimp Orzo Veggie Skillet", ["Shrimp", "Orzo", "Zucchini", "Spinach", "Garlic"]],
+    ["Dinner", "Tofu Noodle Carb Balance Bowl", ["Tofu", "Noodles", "Cabbage", "Carrots", "Sesame sauce"]],
+    ["Snack", "Banana Oat Carb Bites", ["Banana", "Oats", "Peanut butter", "Flax", "Dark chocolate"]],
+    ["Snack", "Rice Cake Berry Stack", ["Rice cakes", "Greek yogurt", "Strawberries", "Honey", "Chia"]],
+    ["Snack", "Sweet Potato Yogurt Dippers", ["Sweet potato", "Greek yogurt", "Cinnamon", "Maple", "Pecans"]],
+    ["Snack", "Trail Mix Granola Cup", ["Granola", "Almonds", "Dried fruit", "Pumpkin seeds", "Coconut"]],
+    ["Snack", "Apple Pretzel Protein Dip", ["Apple", "Pretzels", "Greek yogurt", "Peanut butter", "Cinnamon"]],
+  ];
+
+  const carbCombinationRecipes = carbCombinationSeeds.map(([mealType, title, ingredients], index) => {
+    const isSnack = mealType === "Snack";
+    const isBreakfast = mealType === "Breakfast";
+    const prep = isSnack ? "10 min" : index % 3 === 0 ? "15 min" : index % 3 === 1 ? "20 min" : "30 min+";
+    const calories = isSnack ? 190 + (index % 5) * 30 : isBreakfast ? 300 + (index % 5) * 35 : mealType === "Lunch" ? 360 + (index % 5) * 35 : 420 + (index % 5) * 45;
+    const dietary = isSnack || prep === "10 min" ? "Quick Meal" : index % 2 === 0 ? "Family Friendly" : "High Protein";
+    const category = title.includes("Pasta") || title.includes("Noodle") || title.includes("Orzo") ? "Pasta" : title.includes("Bowl") || title.includes("Plate") ? "Bowls" : title.includes("Stew") ? "Soups" : "Quick Meals";
+
+    return {
+      id: `carb-combo-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`,
+      title,
+      subtitle: `Carb-combination ${mealType.toLowerCase()} pairing ${ingredients.slice(0, 3).join(", ")}.`,
+      cuisine: "American",
+      prep,
+      calories,
+      difficulty: prep === "30 min+" ? "Medium" : "Easy",
+      mealType,
+      dietary,
+      categories: [category, "Quick Meals"],
+      badge: "Carb Combination",
+      badgeTone: { bg: "#FFF4D9", border: "#F0D38A", color: "#C58A15" },
+      image: cuisineRecipeImages.American[mealType],
+      cardTag: { label: "Carb Combo", color: "#F0B23D" },
+      ingredients: [...ingredients, "Carb combination"],
+      steps: [
+        `Prep the main carb base: ${ingredients[0].toLowerCase()}.`,
+        `Pair with ${ingredients.slice(1, 3).join(" and ").toLowerCase()} for steadier energy.`,
+        "Finish with protein, fat, or fiber to round out the plate.",
+      ],
+      swapInsight: `Swap ${ingredients[0].toLowerCase()} with rice, oats, pasta, quinoa, or sweet potato based on what you have.`,
+      reflection: `A carb-combination ${mealType.toLowerCase()} built to feel filling without being one-note.`,
+      nutrientStory: ["Carb Combination", "Fiber Support", "Steady Energy"],
+      macro: {
+        protein: isSnack ? 8 + (index % 4) * 2 : 18 + (index % 5) * 3,
+        carbs: isSnack ? 28 + (index % 5) * 5 : isBreakfast ? 42 + (index % 5) * 5 : 48 + (index % 5) * 6,
+        fats: isSnack ? 7 + (index % 4) * 2 : 9 + (index % 5) * 2,
+      },
+    };
+  });
+
+  const allRecipeCollections = [...recipeCollections, ...expandedCuisineRecipes, ...extraAmericanRecipes, ...carbCombinationRecipes];
+
   const filterOptions = {
     prep: ["Prep Time", "5 min", "10 min", "15 min", "20 min", "30 min+"],
     mealType: ["Meal Type", "Breakfast", "Lunch", "Dinner", "Snack"],
@@ -3700,13 +4119,32 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
     return () => clearTimeout(timer);
   }, [smartPickToast]);
 
+  const ingredientSearchSynonyms = {
+    fish: ["fish", "salmon", "tuna", "cod", "shrimp", "seafood"],
+    seafood: ["seafood", "salmon", "tuna", "cod", "shrimp", "fish"],
+    meat: ["meat", "beef", "turkey", "chicken", "pork", "sausage"],
+    poultry: ["poultry", "chicken", "turkey"],
+    greens: ["greens", "spinach", "kale", "arugula", "romaine", "lettuce"],
+    beans: ["beans", "black beans", "white beans", "chickpeas", "lentils", "cannellini"],
+    pasta: ["pasta", "penne", "orzo", "noodles", "spaghetti"],
+    rice: ["rice", "brown rice", "grain", "quinoa", "farro"],
+    carb: ["carb", "carbs", "carbohydrate", "carb combination", "rice", "oats", "pasta", "quinoa", "farro", "sweet potato"],
+    carbs: ["carb", "carbs", "carbohydrate", "carb combination", "rice", "oats", "pasta", "quinoa", "farro", "sweet potato"],
+  };
+
   const applyRecipeFilters = (recipe) => {
+    const normalizedSearch = search.trim().toLowerCase();
+    const ingredientText = (recipe.ingredients || []).join(" ").toLowerCase();
+    const searchTerms = ingredientSearchSynonyms[normalizedSearch] || [normalizedSearch];
     const matchesSearch =
-      !search ||
-      recipe.title.toLowerCase().includes(search.toLowerCase()) ||
-      recipe.subtitle.toLowerCase().includes(search.toLowerCase()) ||
-      recipe.dietary.toLowerCase().includes(search.toLowerCase()) ||
-      recipe.cuisine.toLowerCase().includes(search.toLowerCase());
+      !normalizedSearch ||
+      searchTerms.some((term) =>
+        recipe.title.toLowerCase().includes(term) ||
+        recipe.subtitle.toLowerCase().includes(term) ||
+        recipe.dietary.toLowerCase().includes(term) ||
+        recipe.cuisine.toLowerCase().includes(term) ||
+        ingredientText.includes(term)
+      );
     const matchesPrep = selectedPrep === "Prep Time" || recipe.prep === selectedPrep;
     const matchesMealType = selectedMealType === "Meal Type" || recipe.mealType === selectedMealType;
     const matchesDietary = selectedDietary === "Dietary Needs" || recipe.dietary === selectedDietary;
@@ -3721,10 +4159,14 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
     return matchesSearch && matchesPrep && matchesMealType && matchesDietary && matchesDifficulty && matchesCuisine && matchesCalories;
   };
 
-  const filteredRecipes = recipeCollections.filter(applyRecipeFilters);
+  const filteredRecipes = allRecipeCollections.filter(applyRecipeFilters);
+  const recipesPerPage = 8;
+  const recipePageCount = Math.max(1, Math.ceil(filteredRecipes.length / recipesPerPage));
+  const paginatedFilteredRecipes = filteredRecipes.slice((recipePage - 1) * recipesPerPage, recipePage * recipesPerPage);
   const activeCategory = categories.find((category) => category.label === selectedCategory) || categories[0];
-  const categoryRecipes = recipeCollections.filter((recipe) => (recipe.categories || []).includes(activeCategory.label));
+  const categoryRecipes = allRecipeCollections.filter((recipe) => (recipe.categories || []).includes(activeCategory.label));
   const activeFilterEntries = [
+    search ? { key: "ingredient", icon: "🔎", label: `Ingredient: ${search}`, clear: () => { setSearch(""); setIngredientSearchDraft(""); } } : null,
     selectedPrep !== "Prep Time" ? { key: "prep", icon: "⏱", label: selectedPrep, clear: () => setSelectedPrep("Prep Time") } : null,
     selectedMealType !== "Meal Type" ? { key: "mealType", icon: "🍽", label: selectedMealType, clear: () => setSelectedMealType("Meal Type") } : null,
     selectedDietary !== "Dietary Needs" ? { key: "dietary", icon: "🥬", label: selectedDietary, clear: () => setSelectedDietary("Dietary Needs") } : null,
@@ -3733,12 +4175,14 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
     selectedCuisine !== "Cuisine" ? { key: "cuisine", icon: "🌍", label: selectedCuisine, clear: () => setSelectedCuisine("Cuisine") } : null,
   ].filter(Boolean);
   const hasCuratedRecipeFilters = activeFilterEntries.length > 0;
-  const featuredRecipe = filteredRecipes[0] || recipeCollections[0];
+  const featuredRecipe = filteredRecipes[0] || allRecipeCollections[0];
   const plannerDays = plannerState?.days || [];
-  const defaultPlannerStartIndex = Math.min(Math.max(selectedDayIndex ?? 0, 0), Math.max(plannerDays.length - 1, 0));
-  const plannerStartIndex = Math.min(Math.max(selectedPlanStartDayIndex ?? defaultPlannerStartIndex, 0), Math.max(plannerDays.length - 1, 0));
-  const plannerStartDay = plannerDays[plannerStartIndex];
-  const plannerEndDay = plannerDays[plannerDays.length - 1];
+  const planDateOptions = createPlannerDateOptions(16);
+  const plannerStartIndex = Math.min(Math.max(selectedPlanStartDayIndex ?? 0, 0), Math.max(planDateOptions.length - 1, 0));
+  const plannerStartDay = planDateOptions[plannerStartIndex];
+  const plannerWeekendOffset = Math.max(0, 6 - (plannerStartDay?.date?.getDay?.() ?? 6));
+  const plannerEndIndex = Math.min(plannerStartIndex + plannerWeekendOffset, planDateOptions.length - 1);
+  const plannerEndDay = planDateOptions[plannerEndIndex];
   const plannerRangeLabel =
     plannerStartDay && plannerEndDay ? `${plannerStartDay.display} to ${plannerEndDay.display}` : "this week";
   const recipeOfTheDay = plannerDay?.meals?.dinner
@@ -3763,7 +4207,7 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
   };
   const openAddToPlanModal = () => {
     setSelectedPlanMealSlot(getRecipeSuggestedSlot(selectedRecipe));
-    setSelectedPlanStartDayIndex(defaultPlannerStartIndex);
+    setSelectedPlanStartDayIndex(0);
     setShowAddToPlanModal(true);
   };
   const closeAddToPlanModal = () => setShowAddToPlanModal(false);
@@ -3773,7 +4217,7 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
     setSelectedSmartPickMealSlot("dinner");
   };
   const saveRecipeToPlanner = () => {
-    if (!selectedRecipe || !setPlannerState || !plannerDays.length) return;
+    if (!selectedRecipe || !setPlannerState || !planDateOptions.length) return;
     const slotLabels = {
       breakfast: "Breakfast",
       lunch: "Lunch",
@@ -3806,10 +4250,17 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
       subtitle: selectedRecipe.subtitle,
       cuisine: selectedRecipe.cuisine,
     });
+    const selectedDateKey = plannerStartDay?.key;
+    const endDateKey = plannerEndDay?.key || selectedDateKey;
 
     setPlannerState((current) => {
-      const days = (current.days || []).map((day, index) => {
-        if (index < plannerStartIndex) return day;
+      const currentDaysByDate = new Map(
+        (current.days || []).map((day) => [getPlannerDateKey(getPlannerDayDate(day)), day])
+      );
+      const days = planDateOptions.map((dateOption) => {
+        const day = currentDaysByDate.get(dateOption.key) || createPlannerDayForDate(dateOption.date);
+        const shouldUpdateDay = dateOption.key >= selectedDateKey && dateOption.key <= endDateKey;
+        if (!shouldUpdateDay) return day;
         const updatedMeals = {
           ...day.meals,
           [selectedPlanMealSlot]: buildRecipeMealEntry(selectedPlanMealSlot, day.meals[selectedPlanMealSlot]),
@@ -3823,6 +4274,7 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
       });
       return {
         ...current,
+        anchorDate: planDateOptions[0]?.date || current.anchorDate,
         days,
         selectedDayIndex: plannerStartIndex,
       };
@@ -3927,6 +4379,9 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
   );
 
   const clearAllRecipeFilters = () => {
+    setSearch("");
+    setIngredientSearchDraft("");
+    setRecipePage(1);
     setSelectedPrep("Prep Time");
     setSelectedMealType("Meal Type");
     setSelectedDietary("Dietary Needs");
@@ -3935,11 +4390,19 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
     setSelectedCuisine("Cuisine");
   };
 
+  useEffect(() => {
+    setRecipePage(1);
+  }, [search, selectedPrep, selectedMealType, selectedDietary, selectedCalories, selectedDifficulty, selectedCuisine]);
+
+  useEffect(() => {
+    setRecipePage((currentPage) => Math.min(currentPage, recipePageCount));
+  }, [recipePageCount]);
+
   const trackRecipeUsage = (recipeId) => {
     const updated = [recipeId, ...frequentlyUsedRecipes.filter(id => id !== recipeId)].slice(0, 6);
     setFrequentlyUsedRecipes(updated);
     try {
-      localStorage.setItem(`mazimeal:frequently-used-recipes:${user || "guest"}`, JSON.stringify(updated));
+      localStorage.setItem(`synergia:frequently-used-recipes:${user || "guest"}`, JSON.stringify(updated));
     } catch {}
   };
 
@@ -3950,7 +4413,7 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
       : [...favoriteRecipes, recipeId];
     setFavoriteRecipes(updated);
     try {
-      localStorage.setItem(`mazimeal:favorite-recipes:${user || "guest"}`, JSON.stringify(updated));
+      localStorage.setItem(`synergia:favorite-recipes:${user || "guest"}`, JSON.stringify(updated));
     } catch {}
   };
 
@@ -4117,7 +4580,7 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
             <div style={{ display: "grid", gap: 14 }}>
               <div style={{ fontFamily: "'Lora'", fontWeight: 700, fontSize: 20, color: "#214A86" }}>⭐ Your Frequently Used Recipes</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12 }}>
-                {recipeCollections
+                {allRecipeCollections
                   .filter(recipe => frequentlyUsedRecipes.includes(recipe.id))
                   .map((recipe) => (
                     <div key={recipe.id} className="card" style={{ ...plannerInspiredGlass, padding: 12, display: "grid", gap: 10, position: "relative" }}>
@@ -4186,8 +4649,8 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
                   display: "flex",
                   flexWrap: "wrap",
                   gap: 10,
-                  justifyContent: "center",
-                  alignItems: "center",
+                  justifyContent: "flex-start",
+                  alignItems: "flex-end",
                   border: `1px solid ${C.border}`,
                   borderRadius: 18,
                   padding: "14px 16px",
@@ -4202,6 +4665,45 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
                 {renderFilterSelect(selectedCalories, filterOptions.calories, setSelectedCalories, "🔥")}
                 {renderFilterSelect(selectedDifficulty, filterOptions.difficulty, setSelectedDifficulty, "⭐")}
                 {renderFilterSelect(selectedCuisine, filterOptions.cuisine, setSelectedCuisine, "🌍")}
+                <label
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 10,
+                    minWidth: 280,
+                    flex: "0 1 380px",
+                    marginLeft: "auto",
+                    height: 44,
+                    border: "1px solid #BED4F1",
+                    borderRadius: 16,
+                    background: "linear-gradient(180deg, #FFFFFF, #F6FAFF)",
+                    padding: "0 14px",
+                    boxShadow: "0 6px 18px rgba(74, 113, 167, 0.08)",
+                  }}
+                >
+                  <span aria-hidden="true">🔎</span>
+                  <input
+                    value={ingredientSearchDraft}
+                    onChange={(event) => setIngredientSearchDraft(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        setSearch(ingredientSearchDraft.trim());
+                      }
+                    }}
+                    placeholder="Search recipes by ingredient"
+                    aria-label="Search recipes by ingredient"
+                    style={{
+                      width: "100%",
+                      border: "none",
+                      outline: "none",
+                      background: "transparent",
+                      color: "#214A86",
+                      fontWeight: 700,
+                      fontSize: 14,
+                    }}
+                  />
+                </label>
               </div>
               {hasCuratedRecipeFilters ? (
                 <>
@@ -4263,8 +4765,9 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
                       </div>
                     </div>
                   ) : (
+                    <>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
-                      {filteredRecipes.slice(0, 10).map((recipe) => (
+                      {paginatedFilteredRecipes.map((recipe) => (
                         <div key={recipe.id} className="card" style={{ ...plannerInspiredGlass, padding: 14, position: "relative" }}>
                           <button
                             style={{
@@ -4307,6 +4810,32 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
                         </div>
                       ))}
                     </div>
+                    {recipePageCount > 1 && (
+                      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 16 }}>
+                        <button
+                          type="button"
+                          className="btn-ghost"
+                          disabled={recipePage === 1}
+                          onClick={() => setRecipePage((page) => Math.max(1, page - 1))}
+                          style={{ background: "#F9FBFF", borderColor: "#CCD5E5", color: "#24487B", opacity: recipePage === 1 ? 0.5 : 1 }}
+                        >
+                          Previous
+                        </button>
+                        <span style={{ color: "#4E678B", fontWeight: 800, fontSize: 13 }}>
+                          Page {recipePage} of {recipePageCount}
+                        </span>
+                        <button
+                          type="button"
+                          className="btn-ghost"
+                          disabled={recipePage === recipePageCount}
+                          onClick={() => setRecipePage((page) => Math.min(recipePageCount, page + 1))}
+                          style={{ background: "#F9FBFF", borderColor: "#CCD5E5", color: "#24487B", opacity: recipePage === recipePageCount ? 0.5 : 1 }}
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
+                    </>
                   )}
                 </>
               ) : (
@@ -4672,7 +5201,7 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
               <div>
                 <div style={{ fontFamily: "'Lora'", fontSize: 28, fontWeight: 700, color: "#214A86" }}>Add to Plan</div>
                 <div style={{ marginTop: 8, color: "#5D6D83", fontSize: 16 }}>
-                  We&apos;ll add <strong>{selectedRecipe.title}</strong> from <strong>{plannerRangeLabel}</strong>, through the weekend.
+                  We&apos;ll add <strong>{selectedRecipe.title}</strong> from <strong>{plannerRangeLabel}</strong>.
                 </div>
               </div>
               <button type="button" onClick={closeAddToPlanModal} style={{ border: "none", background: "transparent", color: "#8A9AB0", fontSize: 30, cursor: "pointer", lineHeight: 1 }}>
@@ -4717,7 +5246,7 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
             <div style={{ border: "1px solid #DDE6F3", borderRadius: 14, background: "linear-gradient(180deg, #FFFFFF, #F6FAFF)", padding: 16 }}>
               <div style={{ color: "#214A86", fontWeight: 800, marginBottom: 12 }}>Choose the day to start adding this recipe</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(92px, 1fr))", gap: 10 }}>
-                {plannerDays.map((day, index) => {
+                {planDateOptions.map((day, index) => {
                   const isActive = plannerStartIndex === index;
                   return (
                     <button
@@ -4900,12 +5429,12 @@ function RecipesClassicPage({ user, setStep, plannerDay, plannerState, setPlanne
         </div>
       )}
 
-      <FloatingSousMazi message="How can I assist you today?" />
+      <FloatingSousSynergia message="How can I assist you today?" />
     </>
   );
 }
 
-function FloatingSousMazi({ message = "How can I assist you today?", right = 18, bottom = 18 }) {
+function FloatingSousSynergia({ message = "How can I assist you today?", right = 18, bottom = 18 }) {
   return (
     <div style={{ position: "fixed", right, bottom, zIndex: 205, display: "grid", justifyItems: "end", gap: 10 }}>
       <div
@@ -4924,7 +5453,7 @@ function FloatingSousMazi({ message = "How can I assist you today?", right = 18,
       </div>
       <button
         type="button"
-        aria-label="Ask Sous Mazi"
+        aria-label="Ask Sous Synergia"
         style={{
           width: 84,
           height: 84,
@@ -5469,7 +5998,7 @@ function TrackerTab({ plannerDay, plannerState, setPlannerState, profile }) {
       </div>
     </div>
 
-      <FloatingSousMazi message="How can I assist you today?" />
+      <FloatingSousSynergia message="How can I assist you today?" />
 
       {showManualLog && (
         <div
@@ -5531,6 +6060,7 @@ function TrackerTab({ plannerDay, plannerState, setPlannerState, profile }) {
 function ProfileTab({ user, profiles, profile, profileCount, setProfiles, setStep }) {
   const primary = profile || { name: "Not set", goal: "Not set" };
   const [editingIndex, setEditingIndex] = useState(null);
+  const [pendingRemovalIndex, setPendingRemovalIndex] = useState(null);
   const [editDraft, setEditDraft] = useState(defaultProfileDraft());
   const invitedCount = profiles.filter((p) => p.invited).length;
   const activeCount = Math.max(0, profileCount - invitedCount);
@@ -5549,11 +6079,21 @@ function ProfileTab({ user, profiles, profile, profileCount, setProfiles, setSte
   };
 
   const removeProfile = (index) => {
-    setProfiles(profiles.filter((_, i) => i !== index));
-    if (editingIndex === index) setEditingIndex(null);
+    const profileToRemove = profiles[index];
+    if (isPrimaryHouseholdProfile(profileToRemove, index)) return;
+    setPendingRemovalIndex(index);
+  };
+
+  const confirmRemoveProfile = () => {
+    if (pendingRemovalIndex === null) return;
+    const indexToRemove = pendingRemovalIndex;
+    setProfiles(profiles.filter((_, i) => i !== indexToRemove));
+    if (editingIndex === indexToRemove) setEditingIndex(null);
+    setPendingRemovalIndex(null);
   };
 
   return (
+    <>
     <div style={{ padding: "24px 20px 92px", maxWidth: 1120, margin: "0 auto", display: "grid", gap: 20 }}>
       <div className="card" style={{
         padding: 0,
@@ -5622,14 +6162,24 @@ function ProfileTab({ user, profiles, profile, profileCount, setProfiles, setSte
                 <option>Moderate</option>
                 <option>Active</option>
               </select></div>
+              <div><label>Activity</label><select value={editDraft.activityType || "Weight lifting"} onChange={e => setEditDraft({ ...editDraft, activityType: e.target.value })}>
+                <option>Weight lifting</option>
+                <option>Gym</option>
+                <option>Yoga</option>
+                <option>Biking</option>
+                <option>Running</option>
+                <option>Walking</option>
+                <option>Swimming</option>
+                <option>Pilates</option>
+              </select></div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
               <div><label>Health goal</label><select value={editDraft.goal} onChange={e => setEditDraft({ ...editDraft, goal: e.target.value })}>
                 <option>Maintain weight</option>
                 <option>Weight loss</option>
                 <option>Weight gain</option>
                 <option>Improve health</option>
               </select></div>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
               <div><label>Dietary pattern</label><select value={editDraft.dietaryPattern} onChange={e => setEditDraft({ ...editDraft, dietaryPattern: e.target.value })}>
                 <option>None</option>
                 <option>Vegan</option>
@@ -5656,21 +6206,24 @@ function ProfileTab({ user, profiles, profile, profileCount, setProfiles, setSte
         {profiles.length === 0 && (
           <div className="card" style={{ padding: 20, color: C.subtext }}>No household profiles created yet.</div>
         )}
-        {profiles.map((p, index) => (
+        {profiles.map((p, index) => {
+          const isPrimaryProfile = isPrimaryHouseholdProfile(p, index);
+          return (
           <div key={index} className="card" style={{ padding: 20, display: "grid", gap: 12, borderLeft: `4px solid ${p.invited ? "#c3b8a3" : C.accent}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 16 }}>{p.name || p.inviteEmail || `Member ${index + 1}`}</div>
-                <div style={{ color: C.subtext, fontSize: 13 }}>{p.role}{p.age ? ` · Age ${p.age}` : ""}{p.invited ? " · Invited" : ""}</div>
+                <div style={{ color: C.subtext, fontSize: 13 }}>{p.role}{p.age ? ` · Age ${p.age}` : ""}{p.invited ? " · Invited" : ""}{isPrimaryProfile ? " · Primary household" : ""}</div>
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 {!p.invited && <button className="btn-ghost" onClick={() => setEditingIndex(index)}>Edit</button>}
-                <button className="btn-ghost" onClick={() => removeProfile(index)}>Remove</button>
+                {!isPrimaryProfile && <button className="btn-ghost" onClick={() => removeProfile(index)}>Remove</button>}
               </div>
             </div>
             <div style={{ display: "grid", gap: 6, color: C.muted, fontSize: 13, background: C.bg, borderRadius: 12, border: `1px solid ${C.border}`, padding: 12 }}>
               <div><strong>Goal:</strong> {p.goal || "Not set"}</div>
-              <div><strong>Activity:</strong> {p.activity || "Not set"}</div>
+              <div><strong>Activity level:</strong> {p.activity || "Not set"}</div>
+              <div><strong>Activity:</strong> {p.activityType || "Not set"}</div>
               <div><strong>Height:</strong> {p.height || "Not set"}</div>
               <div><strong>Weight:</strong> {p.weight ? `${p.weight} lb` : "Not set"}</div>
               <div><strong>Diet:</strong> {p.dietaryPattern || "Not set"}</div>
@@ -5679,15 +6232,22 @@ function ProfileTab({ user, profiles, profile, profileCount, setProfiles, setSte
               {p.invited && <div><strong>Permission:</strong> {p.permission}</div>}
             </div>
           </div>
-        ))}
+        )})}
       </div>
     </div>
+    <ProfileRemovalModal
+      profile={pendingRemovalIndex !== null ? profiles[pendingRemovalIndex] : null}
+      onCancel={() => setPendingRemovalIndex(null)}
+      onConfirm={confirmRemoveProfile}
+    />
+    </>
   );
 }
 
 function ManageHouseholdModule({ profiles, setProfiles, onBack }) {
   const [dragIndex, setDragIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
+  const [pendingRemovalIndex, setPendingRemovalIndex] = useState(null);
 
   const moveProfile = (from, to) => {
     if (to < 0 || to >= profiles.length) return;
@@ -5702,7 +6262,15 @@ function ManageHouseholdModule({ profiles, setProfiles, onBack }) {
   };
 
   const removeProfile = (index) => {
-    setProfiles(profiles.filter((_, i) => i !== index));
+    const profileToRemove = profiles[index];
+    if (isPrimaryHouseholdProfile(profileToRemove, index)) return;
+    setPendingRemovalIndex(index);
+  };
+
+  const confirmRemoveProfile = () => {
+    if (pendingRemovalIndex === null) return;
+    setProfiles(profiles.filter((_, i) => i !== pendingRemovalIndex));
+    setPendingRemovalIndex(null);
   };
 
   const handleDragStart = (index) => (event) => {
@@ -5732,6 +6300,7 @@ function ManageHouseholdModule({ profiles, setProfiles, onBack }) {
   };
 
   return (
+    <>
     <div style={{ padding: "24px 20px 92px", maxWidth: 1120, margin: "0 auto", display: "grid", gap: 20 }}>
       <div>
         <div style={{ color: C.accent, fontSize: 13, fontWeight: 700, letterSpacing: 1.3, textTransform: "uppercase" }}>Household</div>
@@ -5746,6 +6315,7 @@ function ManageHouseholdModule({ profiles, setProfiles, onBack }) {
       {profiles.map((p, index) => {
         const isDragging = dragIndex === index;
         const isDragOver = dragOverIndex === index && dragIndex !== null;
+        const isPrimaryProfile = isPrimaryHouseholdProfile(p, index);
         return (
           <div
             key={index}
@@ -5768,13 +6338,14 @@ function ManageHouseholdModule({ profiles, setProfiles, onBack }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 16 }}>{p.name || p.inviteEmail || `Member ${index + 1}`}</div>
-                <div style={{ color: C.subtext, fontSize: 13 }}>{p.role}{p.age ? ` · Age ${p.age}` : ""}{p.invited ? " · Invited" : ""}</div>
+                <div style={{ color: C.subtext, fontSize: 13 }}>{p.role}{p.age ? ` · Age ${p.age}` : ""}{p.invited ? " · Invited" : ""}{isPrimaryProfile ? " · Primary household" : ""}</div>
               </div>
-              <button className="btn-ghost" onClick={() => removeProfile(index)}>Remove</button>
+              {!isPrimaryProfile && <button className="btn-ghost" onClick={() => removeProfile(index)}>Remove</button>}
             </div>
             <div style={{ display: "grid", gap: 8, color: C.muted, fontSize: 13 }}>
               <div><strong>Goal:</strong> {p.goal || "Not set"}</div>
-              <div><strong>Activity:</strong> {p.activity || "Not set"}</div>
+              <div><strong>Activity level:</strong> {p.activity || "Not set"}</div>
+              <div><strong>Activity:</strong> {p.activityType || "Not set"}</div>
               <div><strong>Diet:</strong> {p.dietaryPattern || "Not set"}</div>
               <div><strong>Preferences:</strong> {p.preferences || "None"}</div>
               {p.invited && <div><strong>Permission:</strong> {p.permission}</div>}
@@ -5795,6 +6366,12 @@ function ManageHouseholdModule({ profiles, setProfiles, onBack }) {
         <button className="btn-ghost" style={{ width: 180 }} onClick={onBack}>Back to profile</button>
       </div>
     </div>
+    <ProfileRemovalModal
+      profile={pendingRemovalIndex !== null ? profiles[pendingRemovalIndex] : null}
+      onCancel={() => setPendingRemovalIndex(null)}
+      onConfirm={confirmRemoveProfile}
+    />
+    </>
   );
 }
 
@@ -5846,8 +6423,8 @@ function BottomNav({ step, setStep }) {
 function OnboardingModule({ user, profiles, profile, profileCount, setProfiles, step, setStep, plannerDay, plannerState, setPlannerState }) {
   const showRightSidebar = step === "profile";
   const [showIntro, setShowIntro] = useState(true);
-  const classicMealLogStorageKey = `mazimeal:classic-meal-log:${user || "guest"}`;
-  const classicHydrationStorageKey = `mazimeal:classic-hydration-log:${user || "guest"}`;
+  const classicMealLogStorageKey = `synergia:classic-meal-log:${user || "guest"}`;
+  const classicHydrationStorageKey = `synergia:classic-hydration-log:${user || "guest"}`;
   const [classicMealLogByDay, setClassicMealLogByDay] = useState(() => safeReadJson(classicMealLogStorageKey, {}));
   const [classicHydrationByDay, setClassicHydrationByDay] = useState(() => safeReadJson(classicHydrationStorageKey, {}));
 
@@ -5877,7 +6454,7 @@ function OnboardingModule({ user, profiles, profile, profileCount, setProfiles, 
         <div className="intro-overlay">
           <div className="intro-core">
             <div className="intro-logo">M</div>
-            <div className="intro-title">Mazimeal</div>
+            <div className="intro-title">Synergia</div>
             <div className="intro-sub">Preparing Your Nutrition Workspace</div>
           </div>
         </div>
@@ -5906,7 +6483,7 @@ function OnboardingModule({ user, profiles, profile, profileCount, setProfiles, 
             plannerDay={plannerDay}
             plannerState={plannerState}
             setPlannerState={setPlannerState}
-            selectedDayIndex={Math.min(Math.max(plannerState.selectedDayIndex ?? new Date().getDay(), 0), 6)}
+            selectedDayIndex={Math.min(Math.max(plannerState.selectedDayIndex ?? new Date().getDay(), 0), Math.max(plannerState.days.length - 1, 0))}
           />
         )}
         {step === "weeklyPlan" && <WeeklyPlanTab profiles={profiles} />}
@@ -5927,7 +6504,7 @@ function OnboardingModule({ user, profiles, profile, profileCount, setProfiles, 
                 anchorDate: typeof anchorDateOrUpdater === "function" ? anchorDateOrUpdater(current.anchorDate) : anchorDateOrUpdater,
               }))
             }
-            selectedDayIndex={Math.min(Math.max(plannerState.selectedDayIndex ?? new Date().getDay(), 0), 6)}
+            selectedDayIndex={Math.min(Math.max(plannerState.selectedDayIndex ?? new Date().getDay(), 0), Math.max(plannerState.days.length - 1, 0))}
             setSelectedDayIndex={(selectedDayIndexOrUpdater) =>
               setPlannerState((current) => ({
                 ...current,
@@ -5938,7 +6515,7 @@ function OnboardingModule({ user, profiles, profile, profileCount, setProfiles, 
                       : selectedDayIndexOrUpdater,
                     0
                   ),
-                  6
+                  Math.max(current.days.length - 1, 0)
                 ),
               }))
             }
@@ -5984,7 +6561,7 @@ function ProfileModule({ profiles, setProfiles, onContinue }) {
           <div style={{ width: 38, height: 38, background: C.accentLight, border: `1.5px solid ${C.accent}`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>👨‍👩‍👧</div>
           <h2 style={{ fontFamily: "'Lora'", fontWeight: 600, fontSize: 24, color: C.text }}>Family Profiles</h2>
         </div>
-        <p style={{ color: C.muted, fontSize: 13.5, marginLeft: 50 }}>Build your household's nutrition map. Mazimeal personalizes every meal recommendation around each person's needs.</p>
+        <p style={{ color: C.muted, fontSize: 13.5, marginLeft: 50 }}>Build your household's nutrition map. Synergia personalizes every meal recommendation around each person's needs.</p>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px,1fr))", gap: 16, marginBottom: 20 }}>
@@ -6102,7 +6679,7 @@ function EngineModule({ profiles, onResults }) {
       <div style={{ width: "100%", maxWidth: 500 }}>
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <div style={{ width: 72, height: 72, background: `linear-gradient(135deg, ${C.accent}, #00D98B)`, borderRadius: 20, margin: "0 auto 18px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, boxShadow: `0 8px 32px ${C.accentGlow}`, animation: "pulse 2s ease-in-out infinite" }}>✦</div>
-          <h2 style={{ fontFamily: "'Lora'", fontWeight: 600, fontSize: 26, color: C.text, marginBottom: 8 }}>Mazimeal Engine Running</h2>
+          <h2 style={{ fontFamily: "'Lora'", fontWeight: 600, fontSize: 26, color: C.text, marginBottom: 8 }}>Synergia Engine Running</h2>
           <p style={{ color: C.muted, fontSize: 13.5 }}>Building your family's personalized nutrition blueprint</p>
         </div>
 
@@ -6813,7 +7390,7 @@ function WeeklyPlannerShowcase({
     { name: "Hummus and carrots", calories: 160, protein: 6, image: imageSet.snack, tip: "A veggie snack helps spread produce through the day.", nutrients: { Fiber: 58, VitaminA: 84, Energy: 44 }, emoji: "🥕" },
     { name: "Cheese and crackers", calories: 200, protein: 10, image: imageSet.snack, tip: "Whole grain crackers hold the snack steadier than refined ones.", nutrients: { Protein: 48, Calcium: 62, Satiety: 60 }, emoji: "🧀" },
     { name: "Berry smoothie", calories: 220, protein: 14, image: imageSet.snack, tip: "Adding yogurt gives it a better protein profile.", nutrients: { Protein: 70, Hydration: 78, Antioxidants: 74 }, emoji: "🫐" },
-    { name: "Banana oat bites", calories: 180, protein: 6, image: imageSet.snack, tip: "Batch prep these to avoid last-minute snack scrambles.", nutrients: { Energy: 58, Fiber: 46, Potassium: 72 }, emoji: "🍌" },
+    { name: "Banana oat bites", calories: 180, protein: 6, image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Energy_Balls_%28Unsplash%29.jpg/960px-Energy_Balls_%28Unsplash%29.jpg", tip: "Batch prep these to avoid last-minute snack scrambles.", nutrients: { Energy: 58, Fiber: 46, Potassium: 72 }, emoji: "🍌" },
   ];
   const templateGroups = { breakfast: breakfastTemplates, lunch: lunchTemplates, dinner: dinnerTemplates, snack: snackTemplates };
   const addMealCategories = [
@@ -6869,8 +7446,35 @@ function WeeklyPlannerShowcase({
   const activeSwapMeal = activeSwapSlot ? currentDay.meals[activeSwapSlot] : null;
   const weekRangeLabel = `${plannerDays[0].monthLabel} ${plannerDays[0].dayNumber} - ${plannerDays[plannerDays.length - 1].monthLabel} ${plannerDays[plannerDays.length - 1].dayNumber}`;
   const calorieTarget = 2000;
+  const normalizePickerDate = (date) => {
+    const normalized = new Date(date);
+    normalized.setHours(0, 0, 0, 0);
+    return normalized;
+  };
+  const pickerMinDate = normalizePickerDate(new Date());
+  const pickerMaxDate = new Date(pickerMinDate);
+  pickerMaxDate.setDate(pickerMinDate.getDate() + 15);
+  const pickerRangeLabel = `${pickerMinDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${pickerMaxDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+  const isDateInPickerWindow = (date) => {
+    const normalized = normalizePickerDate(date);
+    return normalized >= pickerMinDate && normalized <= pickerMaxDate;
+  };
+  const doesDateRangeOverlapPickerWindow = (start, end) =>
+    normalizePickerDate(start) <= pickerMaxDate && normalizePickerDate(end) >= pickerMinDate;
   const calendarMonthLabel = pickerCursorDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
   const calendarMonthStart = new Date(pickerCursorDate.getFullYear(), pickerCursorDate.getMonth(), 1);
+  const previousPickerMonth = new Date(pickerCursorDate.getFullYear(), pickerCursorDate.getMonth() - 1, 1);
+  const previousPickerMonthEnd = new Date(previousPickerMonth.getFullYear(), previousPickerMonth.getMonth() + 1, 0);
+  const nextPickerMonth = new Date(pickerCursorDate.getFullYear(), pickerCursorDate.getMonth() + 1, 1);
+  const nextPickerMonthEnd = new Date(nextPickerMonth.getFullYear(), nextPickerMonth.getMonth() + 1, 0);
+  const canShowPreviousPickerMonth = doesDateRangeOverlapPickerWindow(previousPickerMonth, previousPickerMonthEnd);
+  const canShowNextPickerMonth = doesDateRangeOverlapPickerWindow(nextPickerMonth, nextPickerMonthEnd);
+  const previousPickerYearStart = new Date(pickerCursorDate.getFullYear() - 1, 0, 1);
+  const previousPickerYearEnd = new Date(pickerCursorDate.getFullYear() - 1, 11, 31);
+  const nextPickerYearStart = new Date(pickerCursorDate.getFullYear() + 1, 0, 1);
+  const nextPickerYearEnd = new Date(pickerCursorDate.getFullYear() + 1, 11, 31);
+  const canShowPreviousPickerYear = doesDateRangeOverlapPickerWindow(previousPickerYearStart, previousPickerYearEnd);
+  const canShowNextPickerYear = doesDateRangeOverlapPickerWindow(nextPickerYearStart, nextPickerYearEnd);
   const calendarGridStart = new Date(calendarMonthStart);
   calendarGridStart.setDate(calendarMonthStart.getDate() - calendarMonthStart.getDay());
   const calendarDays = Array.from({ length: 35 }, (_, index) => {
@@ -6898,10 +7502,12 @@ function WeeklyPlannerShowcase({
   const pickerYearLabel = pickerCursorDate.getFullYear();
   const monthOptions = Array.from({ length: 12 }, (_, monthIndex) => {
     const monthDate = new Date(pickerCursorDate.getFullYear(), monthIndex, 1);
+    const monthEndDate = new Date(pickerCursorDate.getFullYear(), monthIndex + 1, 0);
     return {
       key: monthDate.toISOString(),
       label: monthDate.toLocaleDateString("en-US", { month: "short" }),
       monthIndex,
+      isSelectable: doesDateRangeOverlapPickerWindow(monthDate, monthEndDate),
     };
   });
   const getPreparationSteps = (slot, mealName) => {
@@ -7094,12 +7700,12 @@ function WeeklyPlannerShowcase({
                     <div key={slot} className="card" style={{ overflow: "hidden", background: "rgba(255,255,255,0.84)", backdropFilter: "blur(8px)" }}>
                       <div style={{ height: 150, backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.18)), url('${meal.image}')`, backgroundSize: "cover", backgroundPosition: "center" }} />
                       <div style={{ padding: 16, display: "grid", gap: 10 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                          <div>
-                            <div style={{ fontSize: 12, color: C.muted, textTransform: "uppercase", fontWeight: 700, letterSpacing: 1 }}>{label}</div>
-                            <div style={{ fontWeight: 700, fontSize: 18, color: C.text, marginTop: 6 }}>{meal.name}</div>
+                        <div style={{ display: "grid", gap: 8 }}>
+                          <div style={{ fontSize: 12, color: C.muted, textTransform: "uppercase", fontWeight: 700, letterSpacing: 1 }}>{label}</div>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontWeight: 700, fontSize: 18, color: C.text, lineHeight: 1.2, overflowWrap: "anywhere" }}>{meal.name}</div>
+                            <div style={{ color: "#214A86", fontWeight: 700, marginTop: 6 }}>{meal.calories} kcal</div>
                           </div>
-                          <div style={{ color: "#214A86", fontWeight: 700 }}>{meal.calories} kcal</div>
                         </div>
                         <div style={{ color: C.subtext, fontSize: 13 }}>{meal.protein}g protein</div>
                         {meal.sideSuggestion && (
@@ -7343,7 +7949,7 @@ function WeeklyPlannerShowcase({
         </div>
       )}
 
-      <FloatingSousMazi message="How can I assist you today?" />
+      <FloatingSousSynergia message="How can I assist you today?" />
 
       {showWeekPicker && (
         <div onClick={() => setShowWeekPicker(false)} style={{ position: "fixed", inset: 0, background: "rgba(11, 18, 33, 0.4)", display: "grid", placeItems: "center", zIndex: 1050, padding: 20 }}>
@@ -7353,6 +7959,9 @@ function WeeklyPlannerShowcase({
                 <div style={{ color: C.accent, fontSize: 12, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase" }}>Pick A Week</div>
                 <div style={{ fontWeight: 700, fontSize: 24, color: "#214A86", marginTop: 4 }}>
                   {weekPickerView === "weeks" ? calendarMonthLabel : pickerYearLabel}
+                </div>
+                <div style={{ color: C.subtext, fontSize: 12, fontWeight: 700, marginTop: 6 }}>
+                  Available dates: {pickerRangeLabel}
                 </div>
               </div>
               <button className="btn-ghost" onClick={() => setShowWeekPicker(false)}>Close</button>
@@ -7382,7 +7991,9 @@ function WeeklyPlannerShowcase({
                   <button
                     type="button"
                     className="btn-ghost"
+                    disabled={!canShowPreviousPickerMonth}
                     onClick={() => setPickerCursorDate(new Date(pickerCursorDate.getFullYear(), pickerCursorDate.getMonth() - 1, 1))}
+                    style={{ opacity: canShowPreviousPickerMonth ? 1 : 0.45, cursor: canShowPreviousPickerMonth ? "pointer" : "not-allowed" }}
                   >
                     Previous
                   </button>
@@ -7396,7 +8007,9 @@ function WeeklyPlannerShowcase({
                   <button
                     type="button"
                     className="btn-ghost"
+                    disabled={!canShowNextPickerMonth}
                     onClick={() => setPickerCursorDate(new Date(pickerCursorDate.getFullYear(), pickerCursorDate.getMonth() + 1, 1))}
+                    style={{ opacity: canShowNextPickerMonth ? 1 : 0.45, cursor: canShowNextPickerMonth ? "pointer" : "not-allowed" }}
                   >
                     Next
                   </button>
@@ -7404,31 +8017,56 @@ function WeeklyPlannerShowcase({
                 <div style={{ display: "grid", gap: 10 }}>
                   {weekOptions.map((week) => {
                     const isSelectedWeek = plannerAnchorDate >= week.start && plannerAnchorDate <= week.end;
+                    const isWeekSelectable = week.days.some(isDateInPickerWindow);
                     return (
                       <button
                         key={week.key}
                         type="button"
+                        disabled={!isWeekSelectable}
                         onClick={() => {
+                          if (!isWeekSelectable) return;
+                          const firstSelectableDayIndex = week.days.findIndex(isDateInPickerWindow);
+                          const lastSelectableDayIndex = week.days.reduce(
+                            (lastIndex, day, dayIndex) => (isDateInPickerWindow(day) ? dayIndex : lastIndex),
+                            firstSelectableDayIndex
+                          );
+                          const nextSelectedDayIndex = Math.min(
+                            Math.max(selectedDayIndex, firstSelectableDayIndex),
+                            lastSelectableDayIndex
+                          );
                           const nextPlannerState = createInitialWeeklyPlannerState(new Date(week.start));
                           setPlannerAnchorDate(nextPlannerState.anchorDate);
                           setPlannerDays(nextPlannerState.days);
-                          setSelectedDayIndex(Math.min(Math.max(selectedDayIndex, 0), 6));
+                          setSelectedDayIndex(nextSelectedDayIndex);
                           setShowWeekPicker(false);
                         }}
                         style={{
                           border: `1px solid ${isSelectedWeek ? "#214A86" : C.border}`,
-                          background: isSelectedWeek ? "#214A86" : C.white,
-                          color: isSelectedWeek ? C.white : C.text,
+                          background: isSelectedWeek ? "#214A86" : isWeekSelectable ? C.white : "#F1F3F5",
+                          color: isSelectedWeek ? C.white : isWeekSelectable ? C.text : C.dim,
                           borderRadius: 18,
                           padding: "14px 16px",
                           textAlign: "left",
+                          cursor: isWeekSelectable ? "pointer" : "not-allowed",
+                          opacity: isWeekSelectable ? 1 : 0.58,
                         }}
                       >
                         <div style={{ fontWeight: 800, fontSize: 16 }}>Week of {week.label}</div>
                         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8, color: isSelectedWeek ? "rgba(255,255,255,0.86)" : C.subtext, fontSize: 12 }}>
-                          {week.days.map((day) => (
-                            <span key={day.toISOString()}>{day.toLocaleDateString("en-US", { weekday: "short", day: "numeric" })}</span>
-                          ))}
+                          {week.days.map((day) => {
+                            const isDaySelectable = isDateInPickerWindow(day);
+                            return (
+                              <span
+                                key={day.toISOString()}
+                                style={{
+                                  opacity: isDaySelectable ? 1 : 0.35,
+                                  textDecoration: isDaySelectable ? "none" : "line-through",
+                                }}
+                              >
+                                {day.toLocaleDateString("en-US", { weekday: "short", day: "numeric" })}
+                              </span>
+                            );
+                          })}
                         </div>
                       </button>
                     );
@@ -7443,7 +8081,9 @@ function WeeklyPlannerShowcase({
                   <button
                     type="button"
                     className="btn-ghost"
+                    disabled={!canShowPreviousPickerYear}
                     onClick={() => setPickerCursorDate(new Date(pickerCursorDate.getFullYear() - 1, pickerCursorDate.getMonth(), 1))}
+                    style={{ opacity: canShowPreviousPickerYear ? 1 : 0.45, cursor: canShowPreviousPickerYear ? "pointer" : "not-allowed" }}
                   >
                     Previous Year
                   </button>
@@ -7457,7 +8097,9 @@ function WeeklyPlannerShowcase({
                   <button
                     type="button"
                     className="btn-ghost"
+                    disabled={!canShowNextPickerYear}
                     onClick={() => setPickerCursorDate(new Date(pickerCursorDate.getFullYear() + 1, pickerCursorDate.getMonth(), 1))}
+                    style={{ opacity: canShowNextPickerYear ? 1 : 0.45, cursor: canShowNextPickerYear ? "pointer" : "not-allowed" }}
                   >
                     Next Year
                   </button>
@@ -7471,17 +8113,21 @@ function WeeklyPlannerShowcase({
                       <button
                         key={month.key}
                         type="button"
+                        disabled={!month.isSelectable}
                         onClick={() => {
+                          if (!month.isSelectable) return;
                           setPickerCursorDate(new Date(pickerCursorDate.getFullYear(), month.monthIndex, 1));
                           setWeekPickerView("weeks");
                         }}
                         style={{
                           border: `1px solid ${isSelectedMonth ? "#214A86" : C.border}`,
-                          background: isSelectedMonth ? "#214A86" : C.white,
-                          color: isSelectedMonth ? C.white : C.text,
+                          background: isSelectedMonth ? "#214A86" : month.isSelectable ? C.white : "#F1F3F5",
+                          color: isSelectedMonth ? C.white : month.isSelectable ? C.text : C.dim,
                           borderRadius: 16,
                           padding: "14px 10px",
                           fontWeight: 700,
+                          cursor: month.isSelectable ? "pointer" : "not-allowed",
+                          opacity: month.isSelectable ? 1 : 0.55,
                         }}
                       >
                         {month.label}
@@ -7534,11 +8180,11 @@ export default function App() {
     { id: 1, name: "Maya", age: "34", height: "5 ft 6 in", weight: "141", role: "Adult", sex: "Female", activity: "Moderate", goal: "Maintain weight", allergies: "None", dislikes: "None", dietaryPattern: "Mediterranean", preferences: "Chicken, Onion", cuisines: ["Mexican"], lifeStage: "None", pregnancyWeek: "" },
     { id: 2, name: "Noah", age: "8", height: "4 ft 2 in", weight: "62", role: "Child", sex: "Male", activity: "Active", goal: "Grow strong", allergies: "None", dislikes: "Brussels sprouts", dietaryPattern: "None", preferences: "Pasta, Fruit", cuisines: ["American"], lifeStage: "None", pregnancyWeek: "" },
     { id: 3, name: "Ava", age: "12", height: "4 ft 11 in", weight: "90", role: "Child", sex: "Female", activity: "Moderate", goal: "Stay energized", allergies: "Dairy", dislikes: "Mushrooms", dietaryPattern: "None", preferences: "Rice, Berries", cuisines: ["Asian"], lifeStage: "None", pregnancyWeek: "" },
-    { id: 4, name: "Mia", age: "67", height: "5 ft 3 in", weight: "130", role: "Adult", sex: "Female", activity: "Sedentary", goal: "Heart health", allergies: "Gluten", dislikes: "Spicy", dietaryPattern: "Low glycemic / low carb", preferences: "Fish, Greens", cuisines: ["Mediterranean"], lifeStage: "None", pregnancyWeek: "" },
+    { id: 4, name: "Steve Peter", age: "45", height: "5 ft 3 in", weight: "130", role: "Adult", sex: "Female", activity: "Sedentary", goal: "Heart health", allergies: "Gluten", dislikes: "Spicy", dietaryPattern: "Low glycemic / low carb", preferences: "Fish, Greens", cuisines: ["Mediterranean"], lifeStage: "None", pregnancyWeek: "" },
   ]);
   const [setupProfiles, setSetupProfiles] = useState([]);
   const [profileDraft, setProfileDraft] = useState(defaultProfileDraft());
-  const plannerDay = plannerState.days[Math.min(Math.max(plannerState.selectedDayIndex ?? new Date().getDay(), 0), 6)];
+  const plannerDay = plannerState.days[Math.min(Math.max(plannerState.selectedDayIndex ?? new Date().getDay(), 0), Math.max(plannerState.days.length - 1, 0))];
   const plannerSaveTimerRef = useRef(null);
 
   useEffect(() => {
@@ -7591,6 +8237,7 @@ export default function App() {
     <LoginModule 
       initialTab={loginTab} 
       onLogin={n => { setUser(n); setScreen("app"); setStep("homeClassic"); }} 
+      onSignup={() => { setSetupProfiles([]); setProfileDraft(defaultProfileDraft()); setScreen("account"); }}
       onBack={() => setScreen("landing")}
       onNavigateToSection={(section) => {
         setScreen("landing");
@@ -7606,7 +8253,7 @@ export default function App() {
   );
 
   if (screen === "account") return (
-    <CreateAccountModule onBack={() => setScreen("landing")} onNext={({ name, email }) => { setUser(name || "Mazimeal User"); setAccountEmail(email); setScreen("verify"); }} />
+    <CreateAccountModule onBack={() => setScreen("landing")} onNext={({ name, email }) => { setUser(name || "Synergia User"); setAccountEmail(email); setScreen("verify"); }} />
   );
 
   if (screen === "verify") return (

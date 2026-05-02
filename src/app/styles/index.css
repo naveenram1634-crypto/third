@@ -715,6 +715,10 @@ label {
   align-items: end;
 }
 
+.luxury-hero-grid--single {
+  grid-template-columns: minmax(0, 760px);
+}
+
 .luxury-eyebrow {
   display: inline-flex;
   align-items: center;
